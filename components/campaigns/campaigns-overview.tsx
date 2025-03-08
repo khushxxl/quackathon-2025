@@ -11,17 +11,10 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  CalendarIcon,
-  Users,
-  Clock,
-  DollarSign,
-  Pencil,
-  Archive,
-  ExternalLink,
-} from "lucide-react";
+import { CalendarIcon, Users, ExternalLink, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
+import Image from "next/image";
 
 export function CampaignsOverview() {
   const { filteredCampaigns } = useCampaigns();
@@ -52,11 +45,23 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
     completed: "bg-gray-100 text-gray-800",
   };
 
-  const { updateCampaign, deleteCampaign } = useCampaigns();
+  const { deleteCampaign } = useCampaigns();
 
   return (
     <Card>
       <CardHeader className="relative pb-2">
+        {campaign.image && (
+          <div className="w-full h-40 rounded-t-md overflow-hidden -mt-6 -mx-6 mb-2">
+            <div className="relative w-full h-full">
+              <Image
+                src={campaign.image}
+                alt={campaign.name}
+                fill
+                style={{ objectFit: "cover" }}
+              />
+            </div>
+          </div>
+        )}
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl">{campaign.name}</CardTitle>
           <Badge className={statusColors[campaign.status]}>
@@ -71,13 +76,10 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
         <div className="space-y-3">
           <div className="flex items-center text-sm">
             <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
-            <span>
-              {format(campaign.startDate, "MMM d, yyyy")} -{" "}
-              {format(campaign.endDate, "MMM d, yyyy")}
-            </span>
+            <span>Starts: {format(campaign.startDate, "MMM d, yyyy")}</span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 pt-2">
+          <div className="grid grid-cols-2 gap-2 pt-2">
             <div className="flex flex-col items-center p-2 bg-muted rounded-md">
               <Users className="h-4 w-4 mb-1 opacity-70" />
               <span className="text-sm font-medium">
@@ -88,21 +90,15 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
               </span>
             </div>
 
-            <div className="flex flex-col items-center p-2 bg-muted rounded-md">
-              <DollarSign className="h-4 w-4 mb-1 opacity-70" />
-              <span className="text-sm font-medium">
-                ${campaign.fundsRaised}
-              </span>
-              <span className="text-xs text-muted-foreground">Raised</span>
-            </div>
-
-            <div className="flex flex-col items-center p-2 bg-muted rounded-md">
-              <Clock className="h-4 w-4 mb-1 opacity-70" />
-              <span className="text-sm font-medium">
-                {campaign.volunteerHours}
-              </span>
-              <span className="text-xs text-muted-foreground">Hours</span>
-            </div>
+            {campaign.goals.participantTarget && (
+              <div className="flex flex-col items-center p-2 bg-muted rounded-md">
+                <Users className="h-4 w-4 mb-1 opacity-70" />
+                <span className="text-sm font-medium">
+                  {campaign.goals.participantTarget}
+                </span>
+                <span className="text-xs text-muted-foreground">Target</span>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
@@ -113,19 +109,14 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
             View
           </Link>
         </Button>
-        <div className="space-x-2">
-          <Button variant="outline" size="icon" className="h-8 w-8">
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => deleteCampaign(campaign.id)}
-          >
-            <Archive className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button
+          variant="destructive"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => deleteCampaign(campaign.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </CardFooter>
     </Card>
   );

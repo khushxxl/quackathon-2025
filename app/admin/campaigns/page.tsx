@@ -3,7 +3,6 @@ import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { CampaignsOverview } from "@/components/campaigns/campaigns-overview";
 import { CampaignsFilters } from "@/components/campaigns/campaigns-filters";
-import { CampaignProvider } from "@/context/campaign-context";
 import { CreateCampaignButton } from "@/components/campaigns/create-campaign-button";
 
 export const metadata: Metadata = {
@@ -13,7 +12,6 @@ export const metadata: Metadata = {
 
 export default function CampaignsPage() {
   return (
-    <CampaignProvider>
       <DashboardShell>
         <DashboardHeader
           heading="Campaigns"
@@ -25,6 +23,5 @@ export default function CampaignsPage() {
         </div>
         <CampaignsOverview />
       </DashboardShell>
-    </CampaignProvider>
   );
 }

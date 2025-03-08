@@ -5,6 +5,7 @@ import "../globals.css";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { cookies } from "next/headers";
+import { CampaignProvider } from "@/context/campaign-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,6 +27,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className="{inter.className}">
+        <CampaignProvider>
         <SidebarProvider defaultOpen={defaultOpen}>
           <div className="flex min-h-screen">
             <AppSidebar />
@@ -34,6 +36,7 @@ export default async function RootLayout({
             </main>
           </div>
         </SidebarProvider>
+        </CampaignProvider>
       </body>
     </html>
   );

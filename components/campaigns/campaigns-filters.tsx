@@ -30,18 +30,15 @@ import { format } from "date-fns";
 export function CampaignsFilters() {
   const { filters, setFilters, filteredCampaigns } = useCampaigns();
   const [searchText, setSearchText] = useState(filters.search);
-  const [date, setDate] = useState<DateRange | undefined>({
-    from: filters.dateRange.from,
-    to: filters.dateRange.to,
-  });
+  const [date, setDate] = useState<Date | undefined>(filters.dateRange.from);
 
   const handleSearch = () => {
     setFilters({ search: searchText });
   };
 
-  const handleDateChange = (range: DateRange | undefined) => {
-    setDate(range);
-    setFilters({ dateRange: { from: range?.from, to: range?.to } });
+  const handleDateChange = (date: Date | undefined) => {
+    setDate(date);
+    setFilters({ dateRange: { from: date } });
   };
 
   const handleStatusChange = (value: string) => {
@@ -88,27 +85,19 @@ export function CampaignsFilters() {
         <PopoverTrigger asChild>
           <Button variant="outline" className="flex items-center gap-2">
             <CalendarIcon className="h-4 w-4" />
-            {date?.from ? (
-              date.to ? (
-                <span>
-                  {format(date.from, "MMM d")} - {format(date.to, "MMM d")}
-                </span>
-              ) : (
-                format(date.from, "MMM d")
-              )
+            {date ? (
+              <span>{format(date, "MMM d, yyyy")}</span>
             ) : (
-              <span>Date Range</span>
+              <span>Start Date</span>
             )}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             initialFocus
-            mode="range"
-            defaultMonth={date?.from}
+            mode="single"
             selected={date}
             onSelect={handleDateChange}
-            numberOfMonths={2}
           />
         </PopoverContent>
       </Popover>

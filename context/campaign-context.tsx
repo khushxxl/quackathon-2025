@@ -10,19 +10,11 @@ export interface Campaign {
   description: string;
   status: CampaignStatus;
   startDate: Date;
-  endDate: Date;
   participants: number;
-  fundsRaised: number;
-  volunteerHours: number;
   goals: {
-    fundraisingGoal?: number;
     participantTarget?: number;
   };
-  resources: {
-    name: string;
-    url: string;
-  }[];
-  team: string[];
+  image?: string;
 }
 
 interface CampaignContextType {
@@ -30,7 +22,7 @@ interface CampaignContextType {
   filteredCampaigns: Campaign[];
   filters: {
     status: CampaignStatus | "all";
-    dateRange: { from?: Date; to?: Date };
+    dateRange: { from?: Date };
     search: string;
   };
   setFilters: (filters: Partial<CampaignContextType["filters"]>) => void;
@@ -51,18 +43,12 @@ const SAMPLE_CAMPAIGNS: Campaign[] = [
     description: "Community tree planting in urban areas",
     status: "active",
     startDate: new Date(2023, 5, 1),
-    endDate: new Date(2023, 11, 30),
     participants: 120,
-    fundsRaised: 5000,
-    volunteerHours: 480,
     goals: {
-      fundraisingGoal: 7500,
       participantTarget: 150,
     },
-    resources: [
-      { name: "Planting Guide", url: "/resources/planting-guide.pdf" },
-    ],
-    team: ["Jane Smith", "John Doe"],
+    image:
+      "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1374&q=80",
   },
   {
     id: "2",
@@ -70,15 +56,12 @@ const SAMPLE_CAMPAIGNS: Campaign[] = [
     description: "Beach and coastal waters cleanup",
     status: "upcoming",
     startDate: new Date(2023, 7, 15),
-    endDate: new Date(2023, 9, 15),
     participants: 0,
-    fundsRaised: 2000,
-    volunteerHours: 0,
     goals: {
       participantTarget: 75,
     },
-    resources: [],
-    team: ["Alice Johnson"],
+    image:
+      "https://images.unsplash.com/photo-1621451537084-482c73073a0f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1374&q=80",
   },
   {
     id: "3",
@@ -86,18 +69,12 @@ const SAMPLE_CAMPAIGNS: Campaign[] = [
     description: "Educational campaign for proper recycling",
     status: "completed",
     startDate: new Date(2023, 1, 1),
-    endDate: new Date(2023, 3, 30),
     participants: 350,
-    fundsRaised: 3500,
-    volunteerHours: 750,
     goals: {
       participantTarget: 300,
-      fundraisingGoal: 3000,
     },
-    resources: [
-      { name: "Recycling Handbook", url: "/resources/recycling-handbook.pdf" },
-    ],
-    team: ["Mark Wilson", "Sarah Lee"],
+    image:
+      "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
   },
 ];
 
@@ -105,7 +82,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   const [campaigns, setCampaigns] = useState<Campaign[]>(SAMPLE_CAMPAIGNS);
   const [filters, setFiltersState] = useState({
     status: "all" as CampaignStatus | "all",
-    dateRange: {} as { from?: Date; to?: Date },
+    dateRange: {} as { from?: Date },
     search: "",
   });
 
@@ -142,9 +119,6 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
 
     // Date range filter
     if (filters.dateRange.from && campaign.startDate < filters.dateRange.from) {
-      return false;
-    }
-    if (filters.dateRange.to && campaign.endDate > filters.dateRange.to) {
       return false;
     }
 

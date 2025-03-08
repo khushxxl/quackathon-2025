@@ -7,7 +7,7 @@ module.exports = {
     STRIPE_PUBLISHABLE_KEY: process.env.STRIPE_PUBLISHABLE_KEY,
   },
   images: {
-    domains: ["github.com"],
+    domains: ["github.com", "images.unsplash.com"],
   },
   transpilePackages: ["@react-three/drei", "three"],
 };
