@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithSupabase } from "@/lib/db/db.actions";
+
 import { Button } from "@/components/ui/button";
+import { signInWithSupabase } from "@/lib/db.action";
 
 interface FormData {
   email: string;
@@ -51,8 +52,9 @@ function Signin() {
     if (validateForm()) {
       try {
         await signInWithSupabase(formData);
-        router.push("/");
+        router.push("/admin/");
       } catch (error) {
+        alert("An error occurred during sign in. Please try again.");
         setErrors({
           root: "An error occurred during sign in. Please try again.",
         });

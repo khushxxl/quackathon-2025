@@ -12,16 +12,16 @@ export const metadata: Metadata = {
 
 export default function CampaignsPage() {
   return (
-      <DashboardShell>
-        <DashboardHeader
-          heading="Campaigns"
-          description="Manage your environmental campaigns and initiatives"
-        />
-        <div className="flex items-center justify-between mb-4">
-          <CampaignsFilters />
-          <CreateCampaignButton />
-        </div>
-        <CampaignsOverview />
-      </DashboardShell>
+    <DashboardShell>
+      <DashboardHeader
+        heading="Campaigns"
+        description="Manage your environmental campaigns and initiatives"
+      />
+      <div className="flex items-center justify-between mb-4">
+        <CampaignsFilters />
+        <CreateCampaignButton />
+      </div>
+      <CampaignsOverview />
+    </DashboardShell>
   );
 }

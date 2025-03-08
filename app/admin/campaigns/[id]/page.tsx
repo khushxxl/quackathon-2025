@@ -329,15 +329,18 @@ export default function CampaignDetailPage() {
                     <TableCell>{participant.age}</TableCell>
                     <TableCell>{participant.email}</TableCell>
                     <TableCell>
-                      <div className="max-w-[200px] truncate" title={participant.reason}>
+                      <div
+                        className="max-w-[200px] truncate"
+                        title={participant.reason}
+                      >
                         {participant.reason}
                       </div>
                     </TableCell>
                     <TableCell>
                       {participant.resume_link && (
-                        <a 
-                          href={participant.resume_link} 
-                          target="_blank" 
+                        <a
+                          href={participant.resume_link}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:underline"
                         >
