@@ -29,7 +29,9 @@ export default async function RootLayout({
         <SidebarProvider defaultOpen={defaultOpen}>
           <div className="flex min-h-screen">
             <AppSidebar />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 flex items-center justify-center">
+              {children}
+            </main>
           </div>
         </SidebarProvider>
       </body>

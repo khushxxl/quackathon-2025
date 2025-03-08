@@ -20,13 +20,15 @@ export default function DashboardPage() {
         heading="Analytics Dashboard"
         description="Track the impact of your environmental initiatives"
       />
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <VolunteerMetrics />
-        <ParticipantMetrics />
-        <ProgramMetrics />
-        <FeedbackMetrics />
-        <ImpactMetrics />
-        <TrendMetrics />
+      <div className="flex justify-center">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 max-w-6xl">
+          <VolunteerMetrics />
+          <ParticipantMetrics />
+          <ProgramMetrics />
+          <FeedbackMetrics />
+          <ImpactMetrics />
+          <TrendMetrics />
+        </div>
       </div>
     </DashboardShell>
   );
