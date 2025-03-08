@@ -132,15 +132,15 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={isActive("/admin/communities")}
-                  tooltip="Communities"
+                  isActive={isActive("/admin/feedbacks")}
+                  tooltip="Feedbacks"
                   className="hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400 text-base nav-button transition-colors"
                   size="lg"
                 >
-                  <Link href="/admin/communities" className="nav-link">
+                  <Link href="/admin/feedbacks" className="nav-link">
                     <Globe className="h-5 w-5 min-w-5 min-h-5" />
                     <span className={cn("ml-2", isCollapsed && "hidden")}>
-                      Communities
+                      Feedbacks
                     </span>
                   </Link>
                 </SidebarMenuButton>

@@ -51,8 +51,9 @@ function Signin() {
     if (validateForm()) {
       try {
         await signInWithSupabase(formData);
-        router.push("/");
+        router.push("/admin/");
       } catch (error) {
+        alert("An error occurred during sign in. Please try again.");
         setErrors({
           root: "An error occurred during sign in. Please try again.",
         });
