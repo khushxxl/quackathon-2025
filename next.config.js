@@ -1,3 +1,4 @@
+/** @type {import('next').NextConfig} */
 module.exports = {
   env: {
     SUPABASE_URL: process.env.SUPABASE_URL,
@@ -5,4 +6,8 @@ module.exports = {
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_PUBLISHABLE_KEY: process.env.STRIPE_PUBLISHABLE_KEY,
   },
+  images: {
+    domains: ["github.com"],
+  },
+  transpilePackages: ["@react-three/drei", "three"],
 };
