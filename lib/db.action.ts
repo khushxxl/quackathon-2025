@@ -1,4 +1,4 @@
-import { createClient } from "./client";
+import { createClient } from "@/supabase/client";
 
 export async function signInWithSupabase(form: {
   email: string;
@@ -10,18 +10,15 @@ export async function signInWithSupabase(form: {
       email: form.email,
       password: form.password,
     });
-
     if (error) {
       throw error;
     }
-
     return data;
   } catch (error) {
     console.error("Error signing in:", error);
     throw error;
   }
 }
-
 export async function signUpWithSupabase(form: {
   email: string;
   password: string;
@@ -38,27 +35,21 @@ export async function signUpWithSupabase(form: {
         },
       },
     });
-
     if (error) {
       throw error;
     }
-
     return data;
   } catch (error) {
     console.error("Error signing up:", error);
     throw error;
   }
 }
-
 export const getAuthenticatedUser = async () => {
   const supabase = createClient();
   const user = (await supabase.auth.getSession()).data?.session?.user;
-
   // const user = await supabase.auth.getUser();
-
   return user;
 };
-
 export const signoutUser = async () => {
   const supabase = createClient();
   try {
@@ -71,7 +62,6 @@ export const signoutUser = async () => {
     throw error;
   }
 };
-
 export async function addDataToSupabase(tableName: string, data: any) {
   const supabase = createClient();
   try {
@@ -79,18 +69,15 @@ export async function addDataToSupabase(tableName: string, data: any) {
       .from(tableName)
       .insert(data)
       .select();
-
     if (error) {
       throw error;
     }
-
     return insertedData;
   } catch (error) {
     console.error(`Error adding data to ${tableName}:`, error);
     throw error;
   }
 }
-
 export async function deleteDataFromSupabase(
   tableName: string,
   condition: { column: string; value: any }
@@ -101,18 +88,15 @@ export async function deleteDataFromSupabase(
       .from(tableName)
       .delete()
       .eq(condition.column, condition.value);
-
     if (error) {
       throw error;
     }
-
     return data;
   } catch (error) {
     console.error(`Error deleting data from ${tableName}:`, error);
     throw error;
   }
 }
-
 export async function updateDataInSupabase(
   tableName: string,
   id: number,
@@ -125,11 +109,9 @@ export async function updateDataInSupabase(
       .update(data)
       .eq("id", id)
       .select();
-
     if (error) {
       throw error;
     }
-
     return updatedData;
   } catch (error) {
     console.error(`Error updating data in ${tableName}:`, error);
