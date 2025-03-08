@@ -48,31 +48,29 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
   const { deleteCampaign } = useCampaigns();
 
   return (
-    <Card>
-      <CardHeader className="relative pb-2">
+    <Card style={{ padding: 0, marginTop: 10, height: "auto" }}>
+      <CardHeader style={{ padding: 0 }} className="relative pb-2">
         {campaign.image && (
-          <div className="w-full h-40 rounded-t-md overflow-hidden -mt-6 -mx-6 mb-2">
-            <div className="relative w-full h-full">
-              <Image
-                src={campaign.image}
-                alt={campaign.name}
-                fill
-                style={{ objectFit: "cover" }}
-              />
-            </div>
+          <div className="w-[100%] h-[200px] rounded-t-md overflow-hidden  mb-2">
+            <img
+              className="object-cover w-full h-full "
+              src={campaign.image}
+              alt={campaign.name}
+              width={"100%"}
+            />
           </div>
         )}
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start p-2">
           <CardTitle className="text-xl">{campaign.name}</CardTitle>
           <Badge className={statusColors[campaign.status]}>
             {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
           </Badge>
         </div>
-        <CardDescription className="line-clamp-2">
+        <CardDescription className="line-clamp-2 p-2">
           {campaign.description}
         </CardDescription>
       </CardHeader>
-      <CardContent className="pb-2">
+      <CardContent className="pb-2 p-2">
         <div className="space-y-3">
           <div className="flex items-center text-sm">
             <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
@@ -102,7 +100,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between pt-2">
+      <CardFooter className="flex justify-between pt-2 mt-4">
         <Button variant="outline" size="sm" asChild>
           <Link href={`/admin/campaigns/${campaign.id}`}>
             <ExternalLink className="h-4 w-4 mr-2" />

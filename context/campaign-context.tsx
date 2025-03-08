@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { supabase, mapDbCampaignToFrontend } from "@/lib/supabase";
 
 export type CampaignStatus = "active" | "upcoming" | "completed";
 
@@ -12,126 +19,183 @@ export interface Campaign {
   startDate: Date;
   participants: number;
   goals: {
-    participantTarget?: number;
+    participantTarget: number;
   };
-  image?: string;
+  image: string;
 }
 
-interface CampaignContextType {
+interface CampaignFilters {
+  search: string;
+  status: CampaignStatus | "all";
+  dateRange: {
+    from?: Date;
+    to?: Date;
+  };
+}
+
+interface CampaignContextProps {
   campaigns: Campaign[];
   filteredCampaigns: Campaign[];
-  filters: {
-    status: CampaignStatus | "all";
-    dateRange: { from?: Date };
-    search: string;
-  };
-  setFilters: (filters: Partial<CampaignContextType["filters"]>) => void;
-  addCampaign: (campaign: Omit<Campaign, "id">) => void;
-  updateCampaign: (id: string, data: Partial<Campaign>) => void;
-  deleteCampaign: (id: string) => void;
+  filters: CampaignFilters;
+  setFilters: (newFilters: Partial<CampaignFilters>) => void;
+  addCampaign: (
+    campaign: Omit<Campaign, "id">,
+    imageFile?: File | null
+  ) => Promise<void>;
+  deleteCampaign: (id: string) => Promise<void>;
+  loading: boolean;
+  error: string | null;
 }
 
-const CampaignContext = createContext<CampaignContextType | undefined>(
+const CampaignContext = createContext<CampaignContextProps | undefined>(
   undefined
 );
 
-// Sample data for demonstration
-const SAMPLE_CAMPAIGNS: Campaign[] = [
-  {
-    id: "1",
-    name: "Tree Planting Initiative",
-    description: "Community tree planting in urban areas",
-    status: "active",
-    startDate: new Date(2023, 5, 1),
-    participants: 120,
-    goals: {
-      participantTarget: 150,
-    },
-    image:
-      "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1374&q=80",
-  },
-  {
-    id: "2",
-    name: "Ocean Cleanup",
-    description: "Beach and coastal waters cleanup",
-    status: "upcoming",
-    startDate: new Date(2023, 7, 15),
-    participants: 0,
-    goals: {
-      participantTarget: 75,
-    },
-    image:
-      "https://images.unsplash.com/photo-1621451537084-482c73073a0f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1374&q=80",
-  },
-  {
-    id: "3",
-    name: "Recycling Awareness",
-    description: "Educational campaign for proper recycling",
-    status: "completed",
-    startDate: new Date(2023, 1, 1),
-    participants: 350,
-    goals: {
-      participantTarget: 300,
-    },
-    image:
-      "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
-  },
-];
-
 export function CampaignProvider({ children }: { children: ReactNode }) {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(SAMPLE_CAMPAIGNS);
-  const [filters, setFiltersState] = useState({
-    status: "all" as CampaignStatus | "all",
-    dateRange: {} as { from?: Date },
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filters, setFiltersState] = useState<CampaignFilters>({
     search: "",
+    status: "all",
+    dateRange: {},
   });
 
-  const setFilters = (newFilters: Partial<typeof filters>) => {
-    setFiltersState({ ...filters, ...newFilters });
-  };
+  // Fetch campaigns from Supabase
+  useEffect(() => {
+    async function fetchCampaigns() {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.from("campaigns").select("*");
 
-  const addCampaign = (campaign: Omit<Campaign, "id">) => {
-    const newCampaign = {
-      ...campaign,
-      id: Math.random().toString(36).substr(2, 9),
-    };
-    setCampaigns([...campaigns, newCampaign]);
-  };
+        if (error) throw error;
 
-  const updateCampaign = (id: string, data: Partial<Campaign>) => {
-    setCampaigns(
-      campaigns.map((campaign) =>
-        campaign.id === id ? { ...campaign, ...data } : campaign
-      )
-    );
-  };
+        const mappedCampaigns = data.map(mapDbCampaignToFrontend);
+        setCampaigns(mappedCampaigns);
+      } catch (err: any) {
+        console.error("Error fetching campaigns:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  const deleteCampaign = (id: string) => {
-    setCampaigns(campaigns.filter((campaign) => campaign.id !== id));
-  };
+    fetchCampaigns();
+  }, []);
 
-  // Apply filters
+  // Filter campaigns based on filters
   const filteredCampaigns = campaigns.filter((campaign) => {
-    // Status filter
+    // Filter by search text
+    if (
+      filters.search &&
+      !campaign.name.toLowerCase().includes(filters.search.toLowerCase()) &&
+      !campaign.description.toLowerCase().includes(filters.search.toLowerCase())
+    ) {
+      return false;
+    }
+
+    // Filter by status
     if (filters.status !== "all" && campaign.status !== filters.status) {
       return false;
     }
 
-    // Date range filter
+    // Filter by date range
     if (filters.dateRange.from && campaign.startDate < filters.dateRange.from) {
-      return false;
-    }
-
-    // Search filter
-    if (
-      filters.search &&
-      !campaign.name.toLowerCase().includes(filters.search.toLowerCase())
-    ) {
       return false;
     }
 
     return true;
   });
+
+  // Update filters
+  const setFilters = (newFilters: Partial<CampaignFilters>) => {
+    setFiltersState((prev) => ({ ...prev, ...newFilters }));
+  };
+
+  // Add a new campaign
+  const addCampaign = async (
+    campaign: Omit<Campaign, "id">,
+    imageFile?: File | null
+  ) => {
+    try {
+      let imageUrl = campaign.image;
+
+      // If an image file is provided, upload it to Supabase Storage
+      if (imageFile) {
+        const fileExt = imageFile.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(2, 15)}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        // Upload the image to the "images" bucket
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("images")
+          .upload(filePath, imageFile, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        if (uploadError) {
+          console.error("Error uploading image to storage:", uploadError);
+          throw uploadError;
+        }
+
+        // Get the public URL for the uploaded image
+        const { data: urlData } = supabase.storage
+          .from("images")
+          .getPublicUrl(filePath);
+
+        imageUrl = urlData.publicUrl;
+      }
+
+      // Map frontend campaign to database format
+      const dbCampaign = {
+        name: campaign.name,
+        description: campaign.description,
+        status: campaign.status,
+        start_date: campaign.startDate.toISOString(),
+        participants: 0, // New campaigns start with 0 participants
+        participant_target: campaign.goals.participantTarget,
+        image_url: imageUrl,
+        participants_data: [],
+      };
+
+      const { data, error } = await supabase
+        .from("campaigns")
+        .insert(dbCampaign)
+        .select();
+
+      if (error) {
+        console.error("Error inserting campaign record:", error);
+        throw error;
+      }
+
+      // Add the new campaign to the state
+      if (data && data.length > 0) {
+        setCampaigns([...campaigns, mapDbCampaignToFrontend(data[0])]);
+      }
+    } catch (err: any) {
+      console.error("Error adding campaign:", err);
+      setError(err.message);
+      throw err; // Re-throw so the UI can handle it
+    }
+  };
+
+  // Delete a campaign
+  const deleteCampaign = async (id: string) => {
+    try {
+      const { error } = await supabase.from("campaigns").delete().eq("id", id);
+
+      if (error) throw error;
+
+      // Remove campaign from state
+      setCampaigns(campaigns.filter((c) => c.id !== id));
+    } catch (err: any) {
+      console.error("Error deleting campaign:", err);
+      setError(err.message);
+    }
+  };
 
   return (
     <CampaignContext.Provider
@@ -141,8 +205,9 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         filters,
         setFilters,
         addCampaign,
-        updateCampaign,
         deleteCampaign,
+        loading,
+        error,
       }}
     >
       {children}

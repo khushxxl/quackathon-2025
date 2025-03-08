@@ -34,7 +34,9 @@ import Image from "next/image";
 export function CreateCampaignButton() {
   const { addCampaign } = useCampaigns();
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -74,48 +76,52 @@ export function CreateCampaignButton() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // In a real app, you would upload the image to a server
-    // For this example, we'll use a local URL
+    // Store the file for later upload to Supabase Storage
+    setImageFile(file);
+
+    // Create preview for UI
     const reader = new FileReader();
     reader.onload = () => {
       const imageUrl = reader.result as string;
       setImagePreview(imageUrl);
-      setFormData({
-        ...formData,
-        image: imageUrl,
-      });
     };
     reader.readAsDataURL(file);
   };
 
   const handleClearImage = () => {
     setImagePreview(null);
-    setFormData({
-      ...formData,
-      image: "",
-    });
+    setImageFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addCampaign(formData);
-    setOpen(false);
-    // Reset form
-    setFormData({
-      name: "",
-      description: "",
-      status: "upcoming",
-      startDate: new Date(),
-      participants: 0,
-      goals: {
-        participantTarget: 0,
-      },
-      image: "",
-    });
-    setImagePreview(null);
+    setLoading(true);
+
+    try {
+      await addCampaign(formData, imageFile);
+      setOpen(false);
+      // Reset form
+      setFormData({
+        name: "",
+        description: "",
+        status: "upcoming",
+        startDate: new Date(),
+        participants: 0,
+        goals: {
+          participantTarget: 0,
+        },
+        image: "",
+      });
+      setImagePreview(null);
+      setImageFile(null);
+    } catch (error) {
+      console.error("Error creating campaign:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -268,7 +274,9 @@ export function CreateCampaignButton() {
           </div>
 
           <DialogFooter>
-            <Button type="submit">Create Campaign</Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Creating..." : "Create Campaign"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

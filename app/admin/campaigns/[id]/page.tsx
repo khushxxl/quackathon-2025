@@ -1,14 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { format } from "date-fns";
-import { useCampaigns, Campaign } from "@/context/campaign-context";
+import {
+  useCampaigns,
+  Campaign,
+  CampaignStatus,
+} from "@/context/campaign-context";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/lib/supabase";
 import {
   Select,
   SelectContent,
@@ -29,57 +34,22 @@ import { CalendarIcon, Users, ArrowLeft, Download } from "lucide-react";
 
 // Participant type to be used in the campaign
 type Participant = {
-  id: string;
+  age: string;
   name: string;
   email: string;
-  joined: Date;
-  approvalStatus: "approved" | "denied" | "pending";
+  reason: string;
+  applied_at: string;
+  resume_link: string;
+  approval_status: "approved" | "denied" | "pending";
 };
-
-// Sample participant data for the campaign
-const SAMPLE_PARTICIPANTS: Participant[] = [
-  {
-    id: "p1",
-    name: "John Smith",
-    email: "john.smith@example.com",
-    joined: new Date(2023, 5, 10),
-    approvalStatus: "approved",
-  },
-  {
-    id: "p2",
-    name: "Emma Johnson",
-    email: "emma.j@example.com",
-    joined: new Date(2023, 5, 12),
-    approvalStatus: "pending",
-  },
-  {
-    id: "p3",
-    name: "Michael Brown",
-    email: "m.brown@example.com",
-    joined: new Date(2023, 5, 15),
-    approvalStatus: "denied",
-  },
-  {
-    id: "p4",
-    name: "Sophia Davis",
-    email: "sophia.d@example.com",
-    joined: new Date(2023, 5, 18),
-    approvalStatus: "approved",
-  },
-  {
-    id: "p5",
-    name: "Robert Wilson",
-    email: "robert.w@example.com",
-    joined: new Date(2023, 5, 20),
-    approvalStatus: "pending",
-  },
-];
 
 export default function CampaignDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const { campaigns } = useCampaigns();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Status colors for badges
   const statusColors = {
@@ -96,33 +66,142 @@ export default function CampaignDetailPage() {
   };
 
   useEffect(() => {
-    if (params.id) {
-      // Find the campaign with the matching ID
-      const foundCampaign = campaigns.find((c) => c.id === params.id);
-      if (foundCampaign) {
-        setCampaign(foundCampaign);
-        // In a real app, you would fetch participants for this campaign
-        // For this example, we'll use the sample data
-        setParticipants(SAMPLE_PARTICIPANTS);
+    async function fetchCampaignDetails() {
+      if (!params.id) return;
+
+      setLoading(true);
+      try {
+        // Get campaign data from Supabase
+        const { data, error } = await supabase
+          .from("campaigns")
+          .select("*")
+          .eq("id", params.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          const mappedCampaign = {
+            id: data.id,
+            name: data.name,
+            description: data.description,
+            status: data.status as CampaignStatus,
+            startDate: new Date(data.start_date),
+            participants: data.participants,
+            goals: {
+              participantTarget: data.participant_target,
+            },
+            image: data.image_url,
+          };
+
+          setCampaign(mappedCampaign);
+
+          // Get participants data from the JSONB field - use participants_data field
+          const participantsData = data.participants_data || [];
+          setParticipants(participantsData);
+        }
+      } catch (err) {
+        console.error("Error fetching campaign details:", err);
+      } finally {
+        setLoading(false);
       }
     }
-  }, [params.id, campaigns]);
 
-  const handleUpdateApprovalStatus = (
-    participantId: string,
+    fetchCampaignDetails();
+  }, [params.id]);
+
+  const handleUpdateApprovalStatus = async (
+    participantEmail: string,
     status: "approved" | "denied" | "pending"
   ) => {
-    setParticipants(
-      participants.map((p) =>
-        p.id === participantId ? { ...p, approvalStatus: status } : p
-      )
-    );
+    if (!campaign) return;
+
+    try {
+      // Update participant locally first for responsive UI
+      const updatedParticipants = participants.map((p) =>
+        p.email === participantEmail ? { ...p, approval_status: status } : p
+      );
+      setParticipants(updatedParticipants);
+
+      // Get the current campaign from Supabase
+      const { data, error } = await supabase
+        .from("campaigns")
+        .select("participants_data")
+        .eq("id", campaign.id)
+        .single();
+
+      if (error) throw error;
+
+      // Update the specific participant in the JSONB array
+      const updatedParticipantsData = data.participants_data.map((p: any) =>
+        p.email === participantEmail ? { ...p, approval_status: status } : p
+      );
+
+      // Update Supabase
+      const { error: updateError } = await supabase
+        .from("campaigns")
+        .update({
+          participants_data: updatedParticipantsData,
+          // Update participant count if needed
+          participants: updatedParticipantsData.filter(
+            (p: any) => p.approval_status === "approved"
+          ).length,
+        })
+        .eq("id", campaign.id);
+
+      if (updateError) throw updateError;
+    } catch (err) {
+      console.error("Error updating participant status:", err);
+      // Revert the local state on error
+      const { data } = await supabase
+        .from("campaigns")
+        .select("participants_data")
+        .eq("id", campaign.id)
+        .single();
+
+      if (data) {
+        setParticipants(data.participants_data);
+      }
+    }
   };
 
   const handleExportParticipants = () => {
-    // In a real app, this would export the participant data to CSV/Excel
-    alert(`Exporting ${participants.length} participants to Excel`);
+    if (!participants.length) return;
+
+    // Create CSV content
+    const headers = "Name,Email,Age,Reason,Applied,Resume Link,Status\n";
+    const rows = participants
+      .map(
+        (p) =>
+          `"${p.name}","${p.email}","${p.age}","${p.reason}","${new Date(
+            p.applied_at
+          ).toLocaleDateString()}","${p.resume_link}","${p.approval_status}"`
+      )
+      .join("\n");
+    const csvContent = `data:text/csv;charset=utf-8,${headers}${rows}`;
+
+    // Create download link
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute(
+      "download",
+      `participants-${campaign?.name.replace(/\s+/g, "-")}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
+
+  if (loading) {
+    return (
+      <DashboardShell>
+        <div className="flex items-center justify-center h-[400px]">
+          <p>Loading campaign details...</p>
+        </div>
+      </DashboardShell>
+    );
+  }
 
   if (!campaign) {
     return (
@@ -131,11 +210,13 @@ export default function CampaignDetailPage() {
           heading="Campaign not found"
           description="The campaign you're looking for doesn't exist"
         />
-        <Button variant="outline" size="sm" asChild>
-          <a href="/admin/campaigns">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to campaigns
-          </a>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.push("/admin/campaigns")}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to campaigns
         </Button>
       </DashboardShell>
     );
@@ -143,11 +224,14 @@ export default function CampaignDetailPage() {
 
   return (
     <DashboardShell>
-      <Button variant="outline" size="sm" className="mb-6 w-fit" asChild>
-        <a href="/admin/campaigns">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to campaigns
-        </a>
+      <Button
+        variant="outline"
+        size="sm"
+        className="mb-6 w-fit"
+        onClick={() => router.push("/admin/campaigns")}
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back to campaigns
       </Button>
 
       <div className="grid gap-6">
@@ -220,8 +304,11 @@ export default function CampaignDetailPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Age</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Joined</TableHead>
+                <TableHead>Reason</TableHead>
+                <TableHead>Resume</TableHead>
+                <TableHead>Applied</TableHead>
                 <TableHead>Approval Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -229,35 +316,57 @@ export default function CampaignDetailPage() {
             <TableBody>
               {participants.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">
+                  <TableCell colSpan={8} className="text-center">
                     No participants found for this campaign
                   </TableCell>
                 </TableRow>
               ) : (
-                participants.map((participant) => (
-                  <TableRow key={participant.id}>
+                participants.map((participant, index) => (
+                  <TableRow key={index}>
                     <TableCell className="font-medium">
                       {participant.name}
                     </TableCell>
+                    <TableCell>{participant.age}</TableCell>
                     <TableCell>{participant.email}</TableCell>
                     <TableCell>
-                      {format(participant.joined, "MMM d, yyyy")}
+                      <div className="max-w-[200px] truncate" title={participant.reason}>
+                        {participant.reason}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {participant.resume_link && (
+                        <a 
+                          href={participant.resume_link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          View
+                        </a>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(participant.applied_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
                       <span
                         className={
-                          approvalStatusConfig[participant.approvalStatus].color
+                          approvalStatusConfig[participant.approval_status]
+                            .color
                         }
                       >
-                        {approvalStatusConfig[participant.approvalStatus].label}
+                        {
+                          approvalStatusConfig[participant.approval_status]
+                            .label
+                        }
                       </span>
                     </TableCell>
                     <TableCell>
                       <Select
-                        value={participant.approvalStatus}
+                        value={participant.approval_status}
                         onValueChange={(value) =>
                           handleUpdateApprovalStatus(
-                            participant.id,
+                            participant.email,
                             value as "approved" | "denied" | "pending"
                           )
                         }
