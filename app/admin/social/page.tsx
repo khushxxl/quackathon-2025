@@ -1,3 +1,4 @@
+"use client";
 import type { Metadata } from "next";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardShell } from "@/components/dashboard-shell";
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useState, useEffect } from "react";
 
 import {
   Facebook,
@@ -20,28 +22,164 @@ import {
   Instagram,
   Linkedin,
   Image as ImageIcon,
-  Calendar,
   BarChart2,
   ArrowUp,
   ArrowDown,
   Share2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
+import { cn } from "@/lib/utils";
+import { createClient } from "@/supabase/client";
+import { useRouter } from "next/navigation";
+import { User } from "@supabase/supabase-js";
+import { Switch } from "@/components/ui/switch";
 export default function SocialPage() {
+  const [postContent, setPostContent] = useState("");
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [recentPosts, setRecentPosts] = useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userData, setUserData] = useState<any>();
+  const [addToCommunity, setAddToCommunity] = useState(true);
+
+  const checkAuth = async () => {
+    const supabase = createClient();
+
+    const { data, error } = await supabase.auth.getUser();
+    if (data.user) {
+      setUserData(data.user);
+      return true;
+    }
+    if (!data.user) return false;
+  };
+
+  const router = useRouter();
+
+  useEffect(() => {
+    const auth = async () => {
+      const auth = await checkAuth();
+      if (!auth) {
+        router.push("/auth/sign-in");
+      }
+    };
+    auth();
+  }, []);
+
+  const fetchRecentPosts = async () => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("socials")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      if (data) setRecentPosts(data);
+    } catch (error) {
+      console.error("Error fetching recent posts:", error);
+    }
+  };
+
+  const togglePlatform = (platform: string) => {
+    setSelectedPlatforms((prev) =>
+      prev.includes(platform)
+        ? prev.filter((p) => p !== platform)
+        : [...prev, platform]
+    );
+  };
+
+  const handlePublishPost = async () => {
+    if (!postContent || selectedPlatforms.length === 0) return;
+
+    const supabase = createClient();
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.from("socials").insert([
+        {
+          content: postContent,
+          platforms: selectedPlatforms,
+          status: "published",
+          published_at: new Date().toISOString(),
+          user_id: userData?.id,
+          add_to_community: addToCommunity,
+        },
+      ]);
+
+      if (error) throw error;
+
+      // Reset form and refresh posts
+      setPostContent("");
+      setSelectedPlatforms([]);
+      setAddToCommunity(false);
+      fetchRecentPosts();
+    } catch (error) {
+      console.error("Error publishing post:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <DashboardShell>
       <DashboardHeader
         heading="Social Media Management"
         description="Create, schedule, and analyze posts across multiple platforms"
       />
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Reach</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">24.5K</div>
+            <div className="flex items-center text-xs text-green-500 mt-1">
+              <ArrowUp className="h-3 w-3 mr-1" />
+              <span>12% from last month</span>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">
+              Engagement Rate
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">3.2%</div>
+            <div className="flex items-center text-xs text-green-500 mt-1">
+              <ArrowUp className="h-3 w-3 mr-1" />
+              <span>0.5% from last month</span>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Link Clicks</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">1,893</div>
+            <div className="flex items-center text-xs text-red-500 mt-1">
+              <ArrowDown className="h-3 w-3 mr-1" />
+              <span>3% from last month</span>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Top Platform</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold flex items-center">
+              <Instagram className="h-5 w-5 mr-2 text-purple-600" />
+              Instagram
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Based on engagement rate
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="space-y-6 w-full mx-auto justify-center">
         <Card>
@@ -58,6 +196,8 @@ export default function SocialPage() {
                 id="post-content"
                 placeholder="What would you like to share today?"
                 className="min-h-[120px]"
+                value={postContent}
+                onChange={(e) => setPostContent(e.target.value)}
               />
             </div>
 
@@ -70,14 +210,6 @@ export default function SocialPage() {
                 <ImageIcon className="h-4 w-4" />
                 Add Media
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-1"
-              >
-                <Calendar className="h-4 w-4" />
-                Schedule
-              </Button>
             </div>
 
             <div className="space-y-2 pt-4">
@@ -86,7 +218,13 @@ export default function SocialPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
+                  className={cn(
+                    "flex items-center gap-1",
+                    selectedPlatforms.includes("Facebook")
+                      ? "bg-blue-100 dark:bg-blue-900/40 border-blue-300 dark:border-blue-700"
+                      : "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
+                  )}
+                  onClick={() => togglePlatform("Facebook")}
                 >
                   <Facebook className="h-4 w-4 text-blue-600" />
                   Facebook
@@ -94,7 +232,13 @@ export default function SocialPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-1 bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800"
+                  className={cn(
+                    "flex items-center gap-1",
+                    selectedPlatforms.includes("Twitter")
+                      ? "bg-sky-100 dark:bg-sky-900/40 border-sky-300 dark:border-sky-700"
+                      : "bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800"
+                  )}
+                  onClick={() => togglePlatform("Twitter")}
                 >
                   <Twitter className="h-4 w-4 text-sky-500" />
                   Twitter
@@ -102,7 +246,13 @@ export default function SocialPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-1 bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800"
+                  className={cn(
+                    "flex items-center gap-1",
+                    selectedPlatforms.includes("Instagram")
+                      ? "bg-purple-100 dark:bg-purple-900/40 border-purple-300 dark:border-purple-700"
+                      : "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800"
+                  )}
+                  onClick={() => togglePlatform("Instagram")}
                 >
                   <Instagram className="h-4 w-4 text-purple-600" />
                   Instagram
@@ -110,7 +260,13 @@ export default function SocialPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
+                  className={cn(
+                    "flex items-center gap-1",
+                    selectedPlatforms.includes("LinkedIn")
+                      ? "bg-blue-100 dark:bg-blue-900/40 border-blue-300 dark:border-blue-700"
+                      : "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
+                  )}
+                  onClick={() => togglePlatform("LinkedIn")}
                 >
                   <Linkedin className="h-4 w-4 text-blue-700" />
                   LinkedIn
@@ -118,185 +274,24 @@ export default function SocialPage() {
               </div>
             </div>
 
-            <div className="space-y-2 pt-4">
-              <Label htmlFor="campaign">Campaign</Label>
-              <Select>
-                <SelectTrigger id="campaign">
-                  <SelectValue placeholder="Select campaign" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="earth-day">Earth Day 2023</SelectItem>
-                  <SelectItem value="tree-planting">
-                    Tree Planting Initiative
-                  </SelectItem>
-                  <SelectItem value="beach-cleanup">Beach Cleanup</SelectItem>
-                  <SelectItem value="none">No Campaign</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-center space-x-2 pt-4">
+              <Switch
+                id="add-to-community"
+                checked={addToCommunity}
+                onCheckedChange={setAddToCommunity}
+              />
+              <Label htmlFor="add-to-community">Add to Community</Label>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline">Save Draft</Button>
-            <Button className="bg-green-600 hover:bg-green-700">
-              Publish Now
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Total Reach</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">24.5K</div>
-              <div className="flex items-center text-xs text-green-500 mt-1">
-                <ArrowUp className="h-3 w-3 mr-1" />
-                <span>12% from last month</span>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Engagement Rate
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">3.2%</div>
-              <div className="flex items-center text-xs text-green-500 mt-1">
-                <ArrowUp className="h-3 w-3 mr-1" />
-                <span>0.5% from last month</span>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Link Clicks</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">1,893</div>
-              <div className="flex items-center text-xs text-red-500 mt-1">
-                <ArrowDown className="h-3 w-3 mr-1" />
-                <span>3% from last month</span>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Top Platform
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold flex items-center">
-                <Instagram className="h-5 w-5 mr-2 text-purple-600" />
-                Instagram
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                Based on engagement rate
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Posts</CardTitle>
-            <CardDescription>
-              Performance metrics for your recent social media posts
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {/* Post 1 */}
-              <div className="border rounded-lg p-4">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-start gap-3">
-                    {/* <Avatar className="h-10 w-10 border-2 border-green-200">
-                      <AvatarFallback className="bg-green-100 text-green-700 font-semibold">
-                        GT
-                      </AvatarFallback>
-                    </Avatar> */}
-                    <div>
-                      <div className="font-medium">The Green Team</div>
-                      <div className="text-sm text-muted-foreground">
-                        Posted 2 days ago
-                      </div>
-                    </div>
-                  </div>
-                  <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-                    <Facebook className="h-3 w-3 mr-1" />
-                    Facebook
-                  </Badge>
-                </div>
-                <p className="text-sm mb-4">
-                  Join us this weekend for our community tree planting event!
-                  We'll be at Central Park from 9am-12pm. Bring your friends and
-                  family! #GreenTeam #TreePlanting
-                </p>
-                <div className="grid grid-cols-3 gap-2 text-sm">
-                  <div className="flex flex-col items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                    <span className="text-muted-foreground">Reach</span>
-                    <span className="font-semibold">5,234</span>
-                  </div>
-                  <div className="flex flex-col items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                    <span className="text-muted-foreground">Engagement</span>
-                    <span className="font-semibold">432</span>
-                  </div>
-                  <div className="flex flex-col items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                    <span className="text-muted-foreground">Clicks</span>
-                    <span className="font-semibold">89</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Post 2 */}
-              <div className="border rounded-lg p-4">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-start gap-3">
-                    {/* <Avatar className="h-10 w-10 border-2 border-green-200">
-                      <AvatarFallback className="bg-green-100 text-green-700 font-semibold">
-                        GT
-                      </AvatarFallback>
-                    </Avatar> */}
-                    <div>
-                      <div className="font-medium">The Green Team</div>
-                      <div className="text-sm text-muted-foreground">
-                        Posted 5 days ago
-                      </div>
-                    </div>
-                  </div>
-                  <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">
-                    <Instagram className="h-3 w-3 mr-1" />
-                    Instagram
-                  </Badge>
-                </div>
-                <p className="text-sm mb-4">
-                  We're thrilled to announce that we've planted over 10,000
-                  trees this year! Thank you to all our volunteers and
-                  supporters who made this possible. 🌳 #MilestoneAchieved
-                </p>
-                <div className="grid grid-cols-3 gap-2 text-sm">
-                  <div className="flex flex-col items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                    <span className="text-muted-foreground">Reach</span>
-                    <span className="font-semibold">8,721</span>
-                  </div>
-                  <div className="flex flex-col items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                    <span className="text-muted-foreground">Engagement</span>
-                    <span className="font-semibold">1,245</span>
-                  </div>
-                  <div className="flex flex-col items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                    <span className="text-muted-foreground">Clicks</span>
-                    <span className="font-semibold">327</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" className="w-full">
-              View All Posts
+          <CardFooter className="flex justify-end">
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              onClick={handlePublishPost}
+              disabled={
+                isSubmitting || !postContent || selectedPlatforms.length === 0
+              }
+            >
+              {isSubmitting ? "Publishing..." : "Publish Now"}
             </Button>
           </CardFooter>
         </Card>

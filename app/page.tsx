@@ -1,70 +1,119 @@
-import React from "react";
-import Navbar from "@/components/navbar";
+"use client";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { createClient } from "@/supabase/client";
+import ApplyModal from "@/components/apply-modal";
 
 function HomePage() {
-  // Array of active campaigns where volunteers can apply
-  const activeCampaigns = [
-    {
-      id: 1,
-      title: "Summer Nature Camp",
-      description:
-        "Help children explore local parks and learn about ecosystems",
-      location: "City Park",
-      date: "June 15-30, 2023",
-      spots: 12,
-      img: "/images/nature-camp.jpg",
-      requirements: [
-        "Experience with children",
-        "Nature knowledge",
-        "First aid certification",
-      ],
-    },
-    {
-      id: 2,
-      title: "Urban Garden Initiative",
-      description:
-        "Create and maintain community gardens in urban neighborhoods",
-      location: "Downtown Community Center",
-      date: "Ongoing",
-      spots: 8,
-      img: "/images/urban-garden.jpg",
-      requirements: [
-        "Gardening experience",
-        "Commitment to weekly sessions",
-        "Community outreach skills",
-      ],
-    },
-    {
-      id: 3,
-      title: "Beach Cleanup Day",
-      description:
-        "Join our monthly effort to clean local beaches and protect marine life",
-      location: "Coastal Beach",
-      date: "First Saturday of each month",
-      spots: 20,
-      img: "/images/beach-cleanup.jpg",
-      requirements: [
-        "Ability to work outdoors",
-        "Commitment to environmental protection",
-        "Team player attitude",
-      ],
-    },
-    {
-      id: 4,
-      title: "Environmental Education Workshop",
-      description: "Teach children about sustainability and conservation",
-      location: "Various Schools",
-      date: "Weekdays during school hours",
-      spots: 5,
-      img: "/images/environmental-education.jpg",
-      requirements: [
-        "Teaching experience",
-        "Environmental knowledge",
-        "Background check required",
-      ],
-    },
-  ];
+  const [activeCampaigns, setActiveCampaigns] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCampaign, setSelectedCampaign] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [feedbackForm, setFeedbackForm] = useState({
+    name: "",
+    email: "",
+    program: "",
+    feedback: "",
+    contact: false,
+  });
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+  const [feedbackSuccess, setFeedbackSuccess] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  useEffect(() => {
+    async function fetchCampaigns() {
+      const supabase = createClient();
+
+      const { data, error } = await supabase
+        .from("campaigns")
+        .select("*")
+        .eq("status", "active")
+        .order("start_date", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching campaigns:", error);
+      } else {
+        setActiveCampaigns(data || []);
+      }
+
+      setLoading(false);
+    }
+
+    fetchCampaigns();
+  }, []);
+
+  const handleApplyClick = (campaignId: string, campaignName: string) => {
+    setSelectedCampaign({ id: campaignId, name: campaignName });
+  };
+
+  const handleFeedbackChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setFeedbackForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFeedbackForm((prev) => ({
+      ...prev,
+      contact: e.target.checked,
+    }));
+  };
+
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFeedbackSubmitting(true);
+    setFeedbackError("");
+
+    try {
+      const supabase = createClient();
+
+      const { error } = await supabase.from("feedbacks").insert({
+        title: `Feedback on ${feedbackForm.program}`,
+        content: feedbackForm.feedback,
+        category: feedbackForm.program,
+        subcategory: feedbackForm.contact
+          ? "Contact requested"
+          : "No contact needed",
+        status: "pending",
+      });
+
+      if (error) throw error;
+
+      setFeedbackSuccess(true);
+      setFeedbackForm({
+        name: "",
+        email: "",
+        program: "",
+        feedback: "",
+        contact: false,
+      });
+
+      setTimeout(() => {
+        setFeedbackSuccess(false);
+      }, 3000);
+    } catch (err: any) {
+      setFeedbackError(
+        err.message || "Failed to submit feedback. Please try again."
+      );
+    } finally {
+      setFeedbackSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -86,30 +135,30 @@ function HomePage() {
               >
                 Home
               </Link>
-              <Link
-                href="/programs"
+              <button
+                onClick={() => scrollToSection("mission")}
                 className="font-poppins text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 px-3 py-2 text-sm"
               >
-                Programs
-              </Link>
-              <Link
-                href="/volunteer"
+                Mission
+              </button>
+              <button
+                onClick={() => scrollToSection("campaigns")}
                 className="font-poppins text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 px-3 py-2 text-sm"
               >
                 Volunteer
-              </Link>
-              <Link
-                href="/about"
+              </button>
+              <button
+                onClick={() => scrollToSection("impact")}
                 className="font-poppins text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 px-3 py-2 text-sm"
               >
-                About Us
-              </Link>
-              <Link
-                href="/contact"
+                Impact
+              </button>
+              <button
+                onClick={() => scrollToSection("feedback")}
                 className="font-poppins text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 px-3 py-2 text-sm"
               >
-                Contact
-              </Link>
+                Feedback
+              </button>
             </nav>
           </div>
         </div>
@@ -117,7 +166,10 @@ function HomePage() {
 
       <main>
         {/* Hero Section */}
-        <section className="py-24 px-4 md:px-8 max-h-[80vh] lg:px-16 relative overflow-hidden">
+        <section
+          id="hero"
+          className="py-24 px-4 md:px-8 max-h-[80vh] lg:px-16 relative overflow-hidden"
+        >
           {/* Background image with overlay */}
           <div className="absolute inset-0 bg-[url('https://plus.unsplash.com/premium_photo-1661851193078-9e6f0409c9f9?q=80&w=1973&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')] bg-cover bg-center"></div>
           <div className="absolute inset-0 bg-gradient-to-br from-green-600/60 to-green-400/40 dark:from-green-800/70 dark:to-green-600/50 backdrop-blur-sm"></div>
@@ -136,18 +188,18 @@ function HomePage() {
                 people with the natural world through immersive experiences.
               </p>
               <div className="flex flex-col sm:flex-row gap-5 pt-6 justify-center">
-                <Link
-                  href="/volunteer"
+                <button
+                  onClick={() => scrollToSection("campaigns")}
                   className="px-8 py-4 bg-white/20 backdrop-blur-md text-white rounded-xl hover:bg-white/30 transition-all duration-300 font-poppins-bold text-center transform hover:-translate-y-1 border border-white/30"
                 >
                   Volunteer with Us
-                </Link>
-                <Link
-                  href="/programs"
+                </button>
+                <button
+                  onClick={() => scrollToSection("mission")}
                   className="px-8 py-4 bg-green-600/80 backdrop-blur-md border border-green-500/50 text-white rounded-xl hover:bg-green-600/90 transition-all duration-300 font-poppins-bold text-center transform hover:-translate-y-1"
                 >
                   Explore Programs
-                </Link>
+                </button>
               </div>
               <div className="text-sm text-white/70 dark:text-white/60 italic">
                 by BlackRock
@@ -157,7 +209,7 @@ function HomePage() {
         </section>
 
         {/* Mission Section */}
-        <section className="py-24 px-4 md:px-8 lg:px-16 relative">
+        <section id="mission" className="py-24 px-4 md:px-8 lg:px-16 relative">
           <div className="absolute top-1/4 right-0 w-96 h-96 bg-green-100/50 dark:bg-green-900/20 rounded-full blur-3xl"></div>
           <div className="absolute bottom-1/4 left-0 w-64 h-64 bg-green-200/30 dark:bg-green-800/10 rounded-full blur-3xl"></div>
           <div className="max-w-6xl mx-auto relative z-10">
@@ -251,7 +303,10 @@ function HomePage() {
         </section>
 
         {/* Active Campaigns Section */}
-        <section className="py-24 px-4 md:px-8 lg:px-16 bg-gradient-to-br from-green-50 via-white to-green-100/50 dark:from-green-900/30 dark:via-gray-900 dark:to-green-800/20 relative">
+        <section
+          id="campaigns"
+          className="py-24 px-4 md:px-8 lg:px-16 bg-gradient-to-br from-green-50 via-white to-green-100/50 dark:from-green-900/30 dark:via-gray-900 dark:to-green-800/20 relative"
+        >
           <div className="absolute top-0 left-1/4 w-72 h-72 bg-green-300/20 dark:bg-green-700/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-green-200/30 dark:bg-green-800/10 rounded-full blur-3xl"></div>
           <div className="max-w-6xl mx-auto relative z-10">
@@ -264,76 +319,86 @@ function HomePage() {
               </h2>
               <div className="w-24 h-1 bg-gradient-to-r from-green-600 to-green-400 dark:from-green-500 dark:to-green-300 rounded-full"></div>
             </div>
-            <div className="grid md:grid-cols-2 gap-10">
-              {activeCampaigns.map((campaign) => (
-                <div
-                  key={campaign.id}
-                  className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 dark:border-gray-700 group hover:-translate-y-2"
-                >
-                  <div className="relative w-full h-48 mb-6 overflow-hidden rounded-xl">
-                    <img
-                      src={campaign.img}
-                      alt={campaign.title}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
-                  <h3 className="text-2xl font-poppins-bold text-green-700 dark:text-green-400 mb-4">
-                    {campaign.title}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-                    {campaign.description}
-                  </p>
-                  <div className="flex flex-wrap gap-4 mb-6">
-                    <span className="px-4 py-2 bg-gradient-to-r from-green-100 to-green-50 dark:from-green-900/50 dark:to-green-800/30 text-green-700 dark:text-green-400 rounded-lg text-sm font-medium border border-green-200 dark:border-green-800/50">
-                      {campaign.location}
-                    </span>
-                    <span className="px-4 py-2 bg-gradient-to-r from-green-100 to-green-50 dark:from-green-900/50 dark:to-green-800/30 text-green-700 dark:text-green-400 rounded-lg text-sm font-medium border border-green-200 dark:border-green-800/50">
-                      {campaign.date}
-                    </span>
-                    <span className="px-4 py-2 bg-gradient-to-r from-green-100 to-green-50 dark:from-green-900/50 dark:to-green-800/30 text-green-700 dark:text-green-400 rounded-lg text-sm font-medium border border-green-200 dark:border-green-800/50">
-                      {campaign.spots} spots left
-                    </span>
-                  </div>
-                  <div className="mb-8">
-                    <h4 className="text-lg font-poppins-bold text-green-600 dark:text-green-400 mb-3">
-                      Requirements:
-                    </h4>
-                    <ul className="space-y-2">
-                      {campaign.requirements?.map((req, index) => (
-                        <li key={index} className="flex items-start">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 text-green-500 mr-2 mt-0.5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          <span className="text-gray-600 dark:text-gray-300">
-                            {req}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <Link
-                    href={`/volunteer/apply/${campaign.id}`}
-                    className="inline-block px-6 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl hover:shadow-lg hover:shadow-green-500/20 transition duration-300 font-poppins-bold text-center transform group-hover:scale-105"
+
+            {loading ? (
+              <div className="flex justify-center items-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+              </div>
+            ) : activeCampaigns.length > 0 ? (
+              <div className="grid md:grid-cols-2 gap-10">
+                {activeCampaigns.map((campaign: any) => (
+                  <div
+                    key={campaign.id}
+                    className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 dark:border-gray-700 group hover:-translate-y-2"
                   >
-                    Apply Now
-                  </Link>
-                </div>
-              ))}
-            </div>
+                    <div className="relative w-full h-48 mb-6 overflow-hidden rounded-xl">
+                      <img
+                        src={
+                          campaign.image_url ||
+                          "/images/placeholder-campaign.jpg"
+                        }
+                        alt={campaign.name}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                    <h3 className="text-2xl font-poppins-bold text-green-700 dark:text-green-400 mb-4">
+                      {campaign.name}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                      {campaign.description}
+                    </p>
+                    <div className="flex flex-wrap gap-4 mb-6">
+                      <span className="px-4 py-2 bg-gradient-to-r from-green-100 to-green-50 dark:from-green-900/50 dark:to-green-800/30 text-green-700 dark:text-green-400 rounded-lg text-sm font-medium border border-green-200 dark:border-green-800/50">
+                        {new Date(campaign.start_date).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          }
+                        )}
+                      </span>
+                      <span className="px-4 py-2 bg-gradient-to-r from-green-100 to-green-50 dark:from-green-900/50 dark:to-green-800/30 text-green-700 dark:text-green-400 rounded-lg text-sm font-medium border border-green-200 dark:border-green-800/50">
+                        {campaign.participant_target - campaign.participants}{" "}
+                        spots left
+                      </span>
+                    </div>
+                    <button
+                      onClick={() =>
+                        handleApplyClick(campaign.id, campaign.name)
+                      }
+                      className="inline-block px-6 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl hover:shadow-lg hover:shadow-green-500/20 transition duration-300 font-poppins-bold text-center transform group-hover:scale-105"
+                    >
+                      Apply Now
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center p-12 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
+                <h3 className="text-2xl font-poppins-bold text-gray-700 dark:text-gray-300 mb-4">
+                  No Active Campaigns
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  There are currently no active campaigns. Please check back
+                  later or contact us for more information.
+                </p>
+                <Link
+                  href="/contact"
+                  className="inline-block px-6 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl hover:shadow-lg transition duration-300 font-poppins-bold"
+                >
+                  Contact Us
+                </Link>
+              </div>
+            )}
           </div>
         </section>
 
         {/* 3D Impact Visualization Section */}
-        <section className="py-24 px-4 md:px-8 lg:px-16 bg-white dark:bg-gray-900 relative">
+        <section
+          id="visualization"
+          className="py-24 px-4 md:px-8 lg:px-16 bg-white dark:bg-gray-900 relative"
+        >
           <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-green-100/40 dark:bg-green-900/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-green-200/30 dark:bg-green-800/10 rounded-full blur-3xl"></div>
           <div className="max-w-6xl mx-auto relative z-10">
@@ -423,7 +488,10 @@ function HomePage() {
         </section>
 
         {/* Impact Section */}
-        <section className="py-24 px-4 md:px-8 lg:px-16 bg-white dark:bg-gray-900 relative">
+        <section
+          id="impact"
+          className="py-24 px-4 md:px-8 lg:px-16 bg-white dark:bg-gray-900 relative"
+        >
           <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-green-100/40 dark:bg-green-900/10 rounded-full blur-3xl"></div>
           <div className="max-w-6xl mx-auto relative z-10">
             <div className="flex flex-col items-center mb-16">
@@ -468,6 +536,152 @@ function HomePage() {
                   Community Partners
                 </p>
               </div>
+            </div>
+          </div>
+        </section>
+        {/* Feedback Section */}
+        <section className="py-24 px-4 md:px-8 lg:px-16 bg-gray-50 dark:bg-gray-800 relative">
+          <div className="absolute bottom-1/3 left-1/4 w-72 h-72 bg-green-100/40 dark:bg-green-900/10 rounded-full blur-3xl"></div>
+          <div className="max-w-6xl mx-auto relative z-10">
+            <div className="flex flex-col items-center mb-16">
+              <span className="px-4 py-1 bg-white dark:bg-gray-700 shadow-sm rounded-full text-green-600 dark:text-green-400 font-medium text-sm mb-4 border border-green-100 dark:border-green-800">
+                Your Voice Matters
+              </span>
+              <h2 className="text-4xl md:text-5xl font-poppins-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-green-700 to-green-500 dark:from-green-400 dark:to-green-300 mb-6">
+                Share Your Feedback
+              </h2>
+              <div className="w-24 h-1 bg-gradient-to-r from-green-600 to-green-400 dark:from-green-500 dark:to-green-300 rounded-full"></div>
+              <p className="text-center text-gray-600 dark:text-gray-300 max-w-2xl mt-6">
+                We value your thoughts and suggestions. Help us improve our
+                programs and make a greater impact in our community.
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-8 md:p-10">
+              {feedbackSuccess ? (
+                <div className="text-center py-8">
+                  <div className="text-green-600 dark:text-green-400 text-xl font-poppins-bold mb-2">
+                    Thank you for your feedback!
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Your input helps us improve our programs.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleFeedbackSubmit} className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label
+                        htmlFor="name"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                      >
+                        Your Name
+                      </label>
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        required
+                        value={feedbackForm.name}
+                        onChange={handleFeedbackChange}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+                        placeholder="John Doe"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="email"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                      >
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        required
+                        value={feedbackForm.email}
+                        onChange={handleFeedbackChange}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+                        placeholder="your@email.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="program"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Program You're Providing Feedback On
+                    </label>
+                    <select
+                      id="program"
+                      name="program"
+                      required
+                      value={feedbackForm.program}
+                      onChange={handleFeedbackChange}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+                    >
+                      <option value="">Select a campaign</option>
+                      {activeCampaigns.map((campaign: any) => (
+                        <option key={campaign.name} value={campaign.name}>
+                          {campaign.name}
+                        </option>
+                      ))}
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="feedback"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Your Feedback
+                    </label>
+                    <textarea
+                      id="feedback"
+                      name="feedback"
+                      required
+                      rows={5}
+                      value={feedbackForm.feedback}
+                      onChange={handleFeedbackChange}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="Share your experience and suggestions..."
+                    />
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="contact"
+                      name="contact"
+                      checked={feedbackForm.contact}
+                      onChange={handleCheckboxChange}
+                      className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                    />
+                    <label
+                      htmlFor="contact"
+                      className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                    >
+                      I'm open to being contacted about my feedback
+                    </label>
+                  </div>
+
+                  {feedbackError && (
+                    <div className="text-red-500 text-sm">{feedbackError}</div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={feedbackSubmitting}
+                    className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl hover:shadow-lg transition duration-300 font-poppins-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {feedbackSubmitting ? "Submitting..." : "Submit Feedback"}
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         </section>
@@ -517,40 +731,18 @@ function HomePage() {
                 Connecting youth with nature since 2010
               </p>
             </div>
-            <div className="flex gap-8">
-              <Link
-                href="/about"
-                className="text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition duration-300"
-              >
-                About
-              </Link>
-              <Link
-                href="/programs"
-                className="text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition duration-300"
-              >
-                Programs
-              </Link>
-              <Link
-                href="/volunteer"
-                className="text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition duration-300"
-              >
-                Volunteer
-              </Link>
-              <Link
-                href="/contact"
-                className="text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition duration-300"
-              >
-                Contact
-              </Link>
-            </div>
-          </div>
-          <div className="border-t border-gray-200 dark:border-gray-800 mt-12 pt-8 text-center text-gray-500 dark:text-gray-400">
-            <p>
-              © {new Date().getFullYear()} The Green Team. All rights reserved.
-            </p>
           </div>
         </div>
       </footer>
+
+      {selectedCampaign && (
+        <ApplyModal
+          campaignId={selectedCampaign.id}
+          campaignName={selectedCampaign.name}
+          isOpen={true}
+          onClose={() => setSelectedCampaign(null)}
+        />
+      )}
     </div>
   );
 }
