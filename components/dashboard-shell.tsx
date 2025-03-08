@@ -5,10 +5,8 @@ interface DashboardShellProps {
 
 export function DashboardShell({ children }: DashboardShellProps) {
   return (
-    <div className="flex-1 overflow-auto p-6">
-      <div className="mx-auto w-full max-w-7xl space-y-6">
-        {children}
-      </div>
+    <div className="container mx-auto max-w-7xl flex min-h-screen flex-col space-y-6 p-8">
+      {children}
     </div>
   );
 }
