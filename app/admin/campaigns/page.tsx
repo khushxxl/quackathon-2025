@@ -1,22 +1,30 @@
 import type { Metadata } from "next";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { CampaignsOverview } from "@/components/campaigns/campaigns-overview";
+import { CampaignsFilters } from "@/components/campaigns/campaigns-filters";
+import { CampaignProvider } from "@/context/campaign-context";
+import { CreateCampaignButton } from "@/components/campaigns/create-campaign-button";
 
 export const metadata: Metadata = {
-  title: "Communities",
-  description: "Manage your environmental communities",
+  title: "Campaigns",
+  description: "Manage your environmental campaigns and initiatives",
 };
 
-export default function CommunitiesPage() {
+export default function CampaignsPage() {
   return (
-    <DashboardShell>
-      <DashboardHeader
-        heading="Communities"
-        description="Manage your environmental communities and groups"
-      />
-      <div className="flex items-center justify-center h-[500px] border rounded-lg">
-        <p className="text-muted-foreground">Communities content coming soon</p>
-      </div>
-    </DashboardShell>
+    <CampaignProvider>
+      <DashboardShell>
+        <DashboardHeader
+          heading="Campaigns"
+          description="Manage your environmental campaigns and initiatives"
+        />
+        <div className="flex items-center justify-between mb-4">
+          <CampaignsFilters />
+          <CreateCampaignButton />
+        </div>
+        <CampaignsOverview />
+      </DashboardShell>
+    </CampaignProvider>
   );
 }

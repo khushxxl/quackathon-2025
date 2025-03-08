@@ -96,7 +96,7 @@ export function AppSidebar() {
                   className="hover:bg-green-50 hover:text-green-600 text-base nav-button"
                   size="lg"
                 >
-                  <Link href="/campaigns" className="nav-link">
+                  <Link href="/admin/campaigns" className="nav-link">
                     <Calendar className="h-5 w-5 min-w-5 min-h-5" />
                     <span className={cn(isCollapsed && "hidden")}>
                       Campaigns
