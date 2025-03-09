@@ -15,6 +15,7 @@ import { CalendarIcon, Users, ExternalLink, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export function CampaignsOverview() {
   const { filteredCampaigns } = useCampaigns();
@@ -46,9 +47,13 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
   };
 
   const { deleteCampaign } = useCampaigns();
-
+  const router = useRouter();
   return (
-    <Card style={{ padding: 0, marginTop: 10, height: "auto" }}>
+    <Card
+      onClick={() => router.push(`/admin/campaigns/${campaign.id}`)}
+      style={{ padding: 0, marginTop: 10, height: "auto" }}
+      className="cursor-pointer"
+    >
       <CardHeader style={{ padding: 0 }} className="relative pb-2">
         {campaign.image && (
           <div className="w-[100%] h-[200px] rounded-t-md overflow-hidden  mb-2">

@@ -39,7 +39,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
-import { checkAuth } from "@/lib/utils";
+import { checkAuth, sendEmail } from "@/lib/utils";
 
 // Participant type to be used in the campaign
 type Participant = {
@@ -178,6 +178,41 @@ export default function CampaignDetailPage() {
         .eq("id", campaign.id);
 
       if (updateError) throw updateError;
+
+      if (status === "approved") {
+        // Find the participant with the matching ID
+        const participant = participants.find((p) => p.id === participantId);
+        if (participant) {
+          await sendEmail(
+            participant.email,
+            "View Campaign Details",
+            "Campaign Approval",
+            "Your application has been approved",
+            [
+              "Congratulations! You have been approved to participate in this campaign.",
+              "Please click the button below to view the campaign details.",
+            ],
+            `/admin/campaigns/${campaign.id}`,
+            "Campaign Approval"
+          );
+        }
+      }
+      if (status === "rejected") {
+        const participant = participants.find((p) => p.id === participantId);
+        if (participant) {
+          await sendEmail(
+            participant.email,
+            "",
+            "Campaign Rejection",
+            "Your application has been rejected",
+            [
+              "We regret to inform you that your application has been rejected. We shall notify if any other campaign is available.",
+            ],
+            `/admin/campaigns/${campaign.id}`,
+            "Campaign Rejection"
+          );
+        }
+      }
     } catch (err) {
       console.error("Error updating participant status:", err);
       // Revert the local state on error
