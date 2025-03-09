@@ -108,7 +108,7 @@ export function AppSidebar() {
               isCollapsed && "opacity-0 w-0 overflow-hidden"
             )}
           >
-            Green Team Analytics
+            The Green Life Analytics
           </span>
           <SidebarTrigger className="text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40" />
         </div>
