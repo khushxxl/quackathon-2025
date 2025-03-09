@@ -222,20 +222,6 @@ const NatureLand: FC<{ treeCount: number }> = ({ treeCount }) => {
       scale: Math.random() * 0.5 + 0.3,
     }));
 
-  // Update tree count periodically
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTreeCount((prevCount) => {
-        // Randomly increase or decrease tree count within limits
-        const change = Math.floor(Math.random() * 10) - 5; // -5 to +4
-        const newCount = Math.max(20, Math.min(100, prevCount + change));
-        return newCount;
-      });
-    }, 5000); // Update every 5 seconds
-
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <>
       {/* Ambient light for general illumination */}

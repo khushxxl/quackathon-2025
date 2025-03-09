@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { createClient } from "@/supabase/client";
+import { sendEmail } from "@/lib/utils";
 
 interface ApplyModalProps {
   campaignId: string;
@@ -62,6 +63,18 @@ export default function ApplyModal({
       if (error) throw error;
 
       setSuccess(true);
+      await sendEmail(
+        formData.email,
+        "Application Received",
+        "Thank you for your application!",
+        "We've received your application for " + campaignName,
+        [
+          "We'll review your application and get back to you soon.",
+          "If you have any questions, please contact us.",
+        ],
+        "https://example.com/application-status",
+        "Application Received"
+      );
       setTimeout(() => {
         onClose();
         setSuccess(false);
