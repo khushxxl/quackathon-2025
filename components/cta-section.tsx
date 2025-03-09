@@ -231,7 +231,7 @@ function CTASection() {
 
       {/* Toast Notification */}
       {toast.visible && (
-        <div className="fixed bottom-4 right-4 bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg z-50 max-w-md animate-fade-in">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg z-50 max-w-md animate-fade-in">
           <div className="flex items-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
