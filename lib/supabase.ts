@@ -18,8 +18,8 @@ export function mapDbCampaignToFrontend(dbCampaign: any): Campaign {
     goals: {
       participantTarget: dbCampaign.participant_target || 0,
     },
-    image: dbCampaign.image_url || "",
-    requirements: dbCampaign.requirements || "",
-    locations: dbCampaign.locations || "",
+    image: dbCampaign.image_url,
+    locations: dbCampaign.locations,
+    requirements: dbCampaign.requirements,
   };
 }

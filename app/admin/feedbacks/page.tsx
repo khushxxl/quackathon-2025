@@ -29,6 +29,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function FeedbacksPage() {
+  const router = useRouter();
+  const [userData, setUserData] = useState<any>();
+  useEffect(() => {
+    const auth = async () => {
+      const { user, error } = (await checkAuth()) as {
+        user: User;
+        error: any;
+      };
+      if (!user) {
+        router.push("/auth/sign-in");
+      } else {
+        setUserData(user);
+      }
+    };
+
+    auth();
+  }, []);
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState<any[]>([]);
   const [searchText, setSearchText] = useState("");

@@ -22,8 +22,8 @@ export interface Campaign {
     participantTarget: number;
   };
   image: string;
-  requirements: string;
   locations: string;
+  requirements: string;
 }
 
 interface CampaignFilters {

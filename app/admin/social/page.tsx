@@ -28,7 +28,7 @@ import {
   Share2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { checkAuth, cn } from "@/lib/utils";
 import { createClient } from "@/supabase/client";
 import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
@@ -41,26 +41,21 @@ export default function SocialPage() {
   const [userData, setUserData] = useState<any>();
   const [addToCommunity, setAddToCommunity] = useState(true);
 
-  const checkAuth = async () => {
-    const supabase = createClient();
-
-    const { data, error } = await supabase.auth.getUser();
-    if (data.user) {
-      setUserData(data.user);
-      return true;
-    }
-    if (!data.user) return false;
-  };
-
   const router = useRouter();
 
   useEffect(() => {
     const auth = async () => {
-      const auth = await checkAuth();
-      if (!auth) {
+      const { user, error } = (await checkAuth()) as {
+        user: User;
+        error: any;
+      };
+      if (!user) {
         router.push("/auth/sign-in");
+      } else {
+        setUserData(user);
       }
     };
+
     auth();
   }, []);
 

@@ -30,17 +30,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CalendarIcon, Users, ArrowLeft, Download } from "lucide-react";
+import {
+  CalendarIcon,
+  Users,
+  ArrowLeft,
+  Download,
+  MapPin,
+  ClipboardList,
+} from "lucide-react";
+import { User } from "@supabase/supabase-js";
+import { checkAuth } from "@/lib/utils";
 
 // Participant type to be used in the campaign
 type Participant = {
+  id: string;
   age: string;
   name: string;
   email: string;
   reason: string;
   applied_at: string;
   resume_link: string;
-  approval_status: "approved" | "denied" | "pending";
+  approval_status: "approved" | "rejected" | "pending";
+  location?: string;
+  requirements?: string[];
 };
 
 export default function CampaignDetailPage() {
@@ -50,6 +62,23 @@ export default function CampaignDetailPage() {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState<User | null>(null);
+
+  useEffect(() => {
+    const auth = async () => {
+      const { user, error } = (await checkAuth()) as {
+        user: User;
+        error: any;
+      };
+      if (!user) {
+        router.push("/auth/sign-in");
+      } else {
+        setUserData(user);
+      }
+    };
+
+    auth();
+  }, [router]);
 
   // Status colors for badges
   const statusColors = {
@@ -61,8 +90,8 @@ export default function CampaignDetailPage() {
   // Approval status colors and labels
   const approvalStatusConfig = {
     approved: { color: "text-green-600", label: "Approved" },
-    denied: { color: "text-red-600", label: "Denied" },
-    pending: { color: "text-amber-600", label: "Not Set" },
+    rejected: { color: "text-red-600", label: "Rejected" },
+    pending: { color: "text-amber-600", label: "Pending" },
   };
 
   useEffect(() => {
@@ -92,13 +121,24 @@ export default function CampaignDetailPage() {
               participantTarget: data.participant_target,
             },
             image: data.image_url,
+            locations: data.locations,
+            requirements: data.requirements || [],
           };
 
           setCampaign(mappedCampaign as Campaign);
 
-          // Get participants data from the JSONB field - use participants_data field
+          // Get participants data from the JSONB field
           const participantsData = data.participants_data || [];
-          setParticipants(participantsData);
+
+          // Ensure each participant has an id
+          const participantsWithIds = participantsData.map(
+            (p: any, index: number) => ({
+              ...p,
+              id: p.id || `participant-${index}-${Date.now()}`,
+            })
+          );
+
+          setParticipants(participantsWithIds);
         }
       } catch (err) {
         console.error("Error fetching campaign details:", err);
@@ -111,40 +151,28 @@ export default function CampaignDetailPage() {
   }, [params.id]);
 
   const handleUpdateApprovalStatus = async (
-    participantEmail: string,
-    status: "approved" | "denied" | "pending"
+    participantId: string,
+    status: "approved" | "rejected" | "pending"
   ) => {
     if (!campaign) return;
 
     try {
-      // Update participant locally first for responsive UI
+      // Create a new array with the updated participant
       const updatedParticipants = participants.map((p) =>
-        p.email === participantEmail ? { ...p, approval_status: status } : p
+        p.id === participantId ? { ...p, approval_status: status } : p
       );
+
+      // Update local state for immediate UI feedback
       setParticipants(updatedParticipants);
 
-      // Get the current campaign from Supabase
-      const { data, error } = await supabase
-        .from("campaigns")
-        .select("participants_data")
-        .eq("id", campaign.id)
-        .single();
-
-      if (error) throw error;
-
-      // Update the specific participant in the JSONB array
-      const updatedParticipantsData = data.participants_data.map((p: any) =>
-        p.email === participantEmail ? { ...p, approval_status: status } : p
-      );
-
-      // Update Supabase
+      // Update Supabase with the new participants array
       const { error: updateError } = await supabase
         .from("campaigns")
         .update({
-          participants_data: updatedParticipantsData,
-          // Update participant count if needed
-          participants: updatedParticipantsData.filter(
-            (p: any) => p.approval_status === "approved"
+          participants_data: updatedParticipants,
+          // Update participant count based on approved participants
+          participants: updatedParticipants.filter(
+            (p) => p.approval_status === "approved"
           ).length,
         })
         .eq("id", campaign.id);
@@ -169,13 +197,16 @@ export default function CampaignDetailPage() {
     if (!participants.length) return;
 
     // Create CSV content
-    const headers = "Name,Email,Age,Reason,Applied,Resume Link,Status\n";
+    const headers =
+      "Name,Email,Age,Reason,Applied,Resume Link,Status,Location,Requirements\n";
     const rows = participants
       .map(
         (p) =>
           `"${p.name}","${p.email}","${p.age}","${p.reason}","${new Date(
             p.applied_at
-          ).toLocaleDateString()}","${p.resume_link}","${p.approval_status}"`
+          ).toLocaleDateString()}","${p.resume_link}","${p.approval_status}","${
+            p.location || ""
+          }","${(p.requirements || []).join("; ")}"`
       )
       .join("\n");
     const csvContent = `data:text/csv;charset=utf-8,${headers}${rows}`;
@@ -262,7 +293,7 @@ export default function CampaignDetailPage() {
 
             <p className="text-muted-foreground mb-4">{campaign.description}</p>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div className="flex items-center">
                 <CalendarIcon className="mr-2 h-5 w-5 opacity-70" />
                 <div>
@@ -283,6 +314,32 @@ export default function CampaignDetailPage() {
                   </p>
                 </div>
               </div>
+
+              {campaign.locations && (
+                <div className="flex items-center">
+                  <MapPin className="mr-2 h-5 w-5 opacity-70" />
+                  <div>
+                    <p className="text-sm font-medium">Location</p>
+                    <p className="text-sm text-muted-foreground">
+                      {campaign.locations}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {campaign.requirements && campaign.requirements.length > 0 && (
+                <div className="flex items-center">
+                  <ClipboardList className="mr-2 h-5 w-5 opacity-70" />
+                  <div>
+                    <p className="text-sm font-medium">Requirements</p>
+                    <p className="text-sm text-muted-foreground">
+                      {Array.isArray(campaign.requirements)
+                        ? campaign.requirements.join(", ")
+                        : campaign.requirements}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -291,104 +348,110 @@ export default function CampaignDetailPage() {
         <div className="border rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Participants</h2>
-            <Button variant="outline" onClick={handleExportParticipants}>
+            <Button
+              variant="outline"
+              onClick={handleExportParticipants}
+              disabled={participants.length === 0}
+            >
               <Download className="h-4 w-4 mr-2" />
               Export Participants
             </Button>
           </div>
 
-          <Table>
-            <TableCaption>
-              A list of all participants for this campaign.
-            </TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Age</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Reason</TableHead>
-                <TableHead>Resume</TableHead>
-                <TableHead>Applied</TableHead>
-                <TableHead>Approval Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {participants.length === 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableCaption>
+                A list of all participants for this campaign.
+              </TableCaption>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center">
-                    No participants found for this campaign
-                  </TableCell>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Age</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Reason</TableHead>
+                  <TableHead>Resume</TableHead>
+
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ) : (
-                participants.map((participant, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">
-                      {participant.name}
-                    </TableCell>
-                    <TableCell>{participant.age}</TableCell>
-                    <TableCell>{participant.email}</TableCell>
-                    <TableCell>
-                      <div
-                        className="max-w-[200px] truncate"
-                        title={participant.reason}
-                      >
-                        {participant.reason}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {participant.resume_link && (
-                        <a
-                          href={participant.resume_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          View
-                        </a>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(participant.applied_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={
-                          approvalStatusConfig[participant.approval_status]
-                            .color
-                        }
-                      >
-                        {
-                          approvalStatusConfig[participant.approval_status]
-                            .label
-                        }
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        value={participant.approval_status}
-                        onValueChange={(value) =>
-                          handleUpdateApprovalStatus(
-                            participant.email,
-                            value as "approved" | "denied" | "pending"
-                          )
-                        }
-                      >
-                        <SelectTrigger className="w-[120px]">
-                          <SelectValue placeholder="Set Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="approved">Approve</SelectItem>
-                          <SelectItem value="denied">Deny</SelectItem>
-                          <SelectItem value="pending">Not Set</SelectItem>
-                        </SelectContent>
-                      </Select>
+              </TableHeader>
+              <TableBody>
+                {participants.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={10} className="text-center">
+                      No participants found for this campaign
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  participants.map((participant) => (
+                    <TableRow key={participant.id}>
+                      <TableCell className="font-medium">
+                        {participant.name}
+                      </TableCell>
+                      <TableCell>{participant.age}</TableCell>
+                      <TableCell>{participant.email}</TableCell>
+                      <TableCell>
+                        <div
+                          className="max-w-[200px] truncate"
+                          title={participant.reason}
+                        >
+                          {participant.reason}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {participant.resume_link && (
+                          <a
+                            href={participant.resume_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
+                            View
+                          </a>
+                        )}
+                      </TableCell>
+
+                      <TableCell>
+                        <span
+                          className={
+                            approvalStatusConfig[
+                              participant?.approval_status as
+                                | "approved"
+                                | "rejected"
+                                | "pending"
+                            ].color
+                          }
+                        >
+                          {participant?.approval_status[0].toUpperCase() +
+                            participant?.approval_status.slice(1)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={participant?.approval_status}
+                          onValueChange={(value) =>
+                            handleUpdateApprovalStatus(
+                              participant.id,
+                              value as "approved" | "rejected" | "pending"
+                            )
+                          }
+                        >
+                          <SelectTrigger className="w-[120px]">
+                            <SelectValue placeholder="Set Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="approved">Approve</SelectItem>
+                            <SelectItem value="rejected">Reject</SelectItem>
+                            <SelectItem value="pending">Not Set</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
     </DashboardShell>
