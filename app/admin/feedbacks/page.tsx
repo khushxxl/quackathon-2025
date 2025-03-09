@@ -9,8 +9,28 @@ import { cookies } from "next/headers";
 import { formatDistanceToNow } from "date-fns";
 import { createClient } from "@/supabase/client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { checkAuth } from "@/lib/utils";
+import { User } from "@supabase/supabase-js";
 
 export default function FeedbacksPage() {
+  const router = useRouter();
+  const [userData, setUserData] = useState<any>();
+  useEffect(() => {
+    const auth = async () => {
+      const { user, error } = (await checkAuth()) as {
+        user: User;
+        error: any;
+      };
+      if (!user) {
+        router.push("/auth/sign-in");
+      } else {
+        setUserData(user);
+      }
+    };
+
+    auth();
+  }, []);
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
   const fetchFeedbacks = async () => {
     const supabase = createClient();

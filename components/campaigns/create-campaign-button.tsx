@@ -132,7 +132,7 @@ export function CreateCampaignButton() {
           Create Campaign
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl w-full h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Campaign</DialogTitle>
         </DialogHeader>

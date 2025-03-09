@@ -1,3 +1,4 @@
+import { createClient } from "@/supabase/client";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 export function cn(...inputs: ClassValue[]) {
@@ -33,4 +34,15 @@ export const sendEmail = async (
   }
 
   return response.json();
+};
+
+export const checkAuth = async () => {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.auth.getUser();
+  console.log(data);
+  if (data.user) {
+    return { user: data.user, error: null };
+  }
+  if (!data.user) return { user: null, error: error };
 };

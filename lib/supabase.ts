@@ -18,5 +18,7 @@ export function mapDbCampaignToFrontend(dbCampaign: any) {
       participantTarget: dbCampaign.participant_target,
     },
     image: dbCampaign.image_url,
+    locations: dbCampaign.locations,
+    requirements: dbCampaign.requirements,
   };
 }

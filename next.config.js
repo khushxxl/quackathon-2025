@@ -11,6 +11,7 @@ module.exports = {
       "github.com",
       "images.unsplash.com",
       "kolvaifhcynbfqnpmmds.supabase.co",
+      "example.com",
     ],
   },
   transpilePackages: ["@react-three/drei", "three"],

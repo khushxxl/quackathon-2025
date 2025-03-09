@@ -8,9 +8,9 @@ import {
   LogOut,
   MessageSquare,
   Settings,
-  User,
   BarChart,
   TreePine,
+  User as UserIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -41,11 +41,45 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+import { checkAuth, cn } from "@/lib/utils";
+import { createClient } from "@/supabase/client";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { User } from "@supabase/supabase-js";
 export function AppSidebar() {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createClient();
+
+  const [userData, setUserData] = useState<any>();
+
+  useEffect(() => {
+    const auth = async () => {
+      const { user, error } = (await checkAuth()) as {
+        user: User;
+        error: any;
+      };
+      if (!user) {
+        router.push("/auth/sign-in");
+      } else {
+        console.log(user);
+        setUserData(user);
+      }
+    };
+
+    auth();
+  }, [router]);
+
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      router.push("/auth/sign-in");
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   // Check if a path is active (exact match or starts with for nested routes)
   const isActive = (path: string) => {
@@ -202,16 +236,7 @@ export function AppSidebar() {
                 isCollapsed ? "justify-center" : "justify-start"
               )}
             >
-              <div className="relative">
-                <Image
-                  src="/placeholder.svg?height=40&width=40"
-                  alt="User avatar"
-                  width={40}
-                  height={40}
-                  className="rounded-full min-w-10 min-h-10 border-2 border-green-200 dark:border-green-800"
-                />
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
-              </div>
+              <UserIcon className="h-5 w-5 min-w-5 min-h-5" />
               <div
                 className={cn(
                   "flex flex-col items-start text-left transition-opacity duration-200",
@@ -226,21 +251,16 @@ export function AppSidebar() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer hover:bg-green-50 dark:hover:bg-green-900/20">
-              <User className="mr-2 h-4 w-4" />
-              <span>Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer hover:bg-green-50 dark:hover:bg-green-900/20">
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
-            </DropdownMenuItem>
+            <div className="">
+              <Button
+                variant="ghost"
+                className="w-full h-auto hover:bg-green-50 dark:hover:bg-green-900/20 p-2 rounded-lg transition-colors"
+                onClick={signOut}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </Button>
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarFooter>
