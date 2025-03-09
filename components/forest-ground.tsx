@@ -1,6 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stars, Cloud, Html } from "@react-three/drei";
-import { Suspense, useRef, useState, useEffect } from "react";
+import { Suspense, useRef, useState, useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { FC } from "react";
 
@@ -10,67 +10,127 @@ interface TreeProps {
   trunkRadius?: number;
   leafColor?: string;
   scale?: number;
+  searchName?: string;
 }
 
-const Tree: FC<TreeProps> = ({ position, scale = 1 }) => {
-  // Random tree type (0-2)
-  const treeType = Math.floor(Math.random() * 3);
+const Tree: FC<TreeProps> = ({ position, scale = 1, searchName = "" }) => {
   const [treePosition, setTreePosition] =
     useState<[number, number, number]>(position);
+  const [isSelected, setIsSelected] = useState(false);
 
-  // Random human names for trees
-  const humanNames = [
-    "Emma",
-    "Liam",
-    "Olivia",
-    "Noah",
-    "Ava",
-    "William",
-    "Sophia",
-    "James",
-    "Isabella",
-    "Oliver",
-    "Charlotte",
-    "Benjamin",
-    "Amelia",
-    "Elijah",
-    "Mia",
-    "Lucas",
-    "Harper",
-    "Mason",
-    "Evelyn",
-    "Logan",
-  ];
-  const treeName = humanNames[Math.floor(Math.random() * humanNames.length)];
+  // Use useMemo to generate random values once and preserve them
+  const treeData = useMemo(() => {
+    // Random tree type (0-2)
+    const treeType = Math.floor(Math.random() * 3);
 
-  // Randomize colors slightly
-  const baseTreeColor = "#2D5A27";
-  const baseTrunkColor = "#4A3B22";
-  const colorVariation = () => (Math.random() - 0.5) * 0.2;
+    // Random human names for trees
+    const humanNames = [
+      "Emma",
+      "Liam",
+      "Olivia",
+      "Noah",
+      "Ava",
+      "William",
+      "Sophia",
+      "James",
+      "Isabella",
+      "Oliver",
+      "Charlotte",
+      "Benjamin",
+      "Amelia",
+      "Elijah",
+      "Mia",
+      "Lucas",
+      "Harper",
+      "Mason",
+      "Evelyn",
+      "Logan",
+    ];
+    const treeName = humanNames[Math.floor(Math.random() * humanNames.length)];
 
-  const treeColor = new THREE.Color(baseTreeColor)
-    .offsetHSL(colorVariation(), colorVariation() * 0.3, colorVariation() * 0.2)
-    .getStyle();
-  const trunkColor = new THREE.Color(baseTrunkColor)
-    .offsetHSL(0, 0, colorVariation() * 0.2)
-    .getStyle();
+    // Add tree age (in months, 1-60)
+    const treeAge = Math.floor(Math.random() * 60) + 1;
+
+    // Determine stage based on age
+    let treeStage = "Seedling";
+    if (treeAge > 36) treeStage = "Mature";
+    else if (treeAge > 12) treeStage = "Young";
+
+    // Random donation amount ($10-500)
+    const donationAmount = Math.floor(Math.random() * 491) + 10;
+
+    // Randomize colors slightly
+    const baseTreeColor = "#2D5A27";
+    const baseTrunkColor = "#4A3B22";
+    const colorVariation = () => (Math.random() - 0.5) * 0.2;
+
+    const treeColor = new THREE.Color(baseTreeColor)
+      .offsetHSL(
+        colorVariation(),
+        colorVariation() * 0.3,
+        colorVariation() * 0.2
+      )
+      .getStyle();
+    const trunkColor = new THREE.Color(baseTrunkColor)
+      .offsetHSL(0, 0, colorVariation() * 0.2)
+      .getStyle();
+
+    return {
+      treeType,
+      treeName,
+      treeAge,
+      treeStage,
+      donationAmount,
+      treeColor,
+      trunkColor,
+    };
+    // Empty dependency array ensures this runs once on mount
+  }, []);
+
+  const {
+    treeType,
+    treeName,
+    treeAge,
+    treeStage,
+    donationAmount,
+    treeColor,
+    trunkColor,
+  } = treeData;
+
+  // Check if this tree matches the search term
+  useEffect(() => {
+    if (
+      searchName &&
+      treeName.toLowerCase().includes(searchName.toLowerCase())
+    ) {
+      setIsSelected(true);
+    } else if (searchName) {
+      setIsSelected(false);
+    }
+  }, [searchName, treeName]);
+
+  // Handle click on tree
+  const handleTreeClick = (e: any) => {
+    e.stopPropagation();
+    setIsSelected(!isSelected);
+  };
 
   const renderTreeType0 = () => (
     // Tall pine tree
     <>
-      <mesh position={[0, 1.5, 0]}>
+      <mesh position={[0, 1.5, 0]} onClick={handleTreeClick}>
         <cylinderGeometry args={[0.2, 0.3, 3, 8]} />
         <meshStandardMaterial color={trunkColor} roughness={0.8} />
       </mesh>
-      <mesh position={[0, 2.8, 0]}>
+      <mesh position={[0, 2.8, 0]} onClick={handleTreeClick}>
         <coneGeometry args={[1.4, 3.5, 8]} />
         <meshStandardMaterial color={treeColor} />
       </mesh>
-      <mesh position={[0, 3.8, 0]}>
+      <mesh position={[0, 3.8, 0]} onClick={handleTreeClick}>
         <coneGeometry args={[1, 2.5, 8]} />
         <meshStandardMaterial color={treeColor} />
       </mesh>
-      <mesh position={[0, 4.5, 0]}>
+      <mesh position={[0, 4.5, 0]} onClick={handleTreeClick}>
         <coneGeometry args={[0.6, 1.5, 8]} />
         <meshStandardMaterial color={treeColor} />
       </mesh>
@@ -80,20 +140,20 @@ const Tree: FC<TreeProps> = ({ position, scale = 1 }) => {
   const renderTreeType1 = () => (
     // Bushy tree
     <>
-      <mesh position={[0, 1, 0]}>
+      <mesh position={[0, 1, 0]} onClick={handleTreeClick}>
         <cylinderGeometry args={[0.25, 0.35, 2, 8]} />
         <meshStandardMaterial color={trunkColor} roughness={0.8} />
       </mesh>
       <group position={[0, 2.5, 0]}>
-        <mesh>
+        <mesh onClick={handleTreeClick}>
           <sphereGeometry args={[1.2, 8, 8]} />
           <meshStandardMaterial color={treeColor} />
         </mesh>
-        <mesh position={[0, 0.8, 0]}>
+        <mesh position={[0, 0.8, 0]} onClick={handleTreeClick}>
           <sphereGeometry args={[0.9, 8, 8]} />
           <meshStandardMaterial color={treeColor} />
         </mesh>
-        <mesh position={[0, -0.8, 0]}>
+        <mesh position={[0, -0.8, 0]} onClick={handleTreeClick}>
           <sphereGeometry args={[1.1, 8, 8]} />
           <meshStandardMaterial color={treeColor} />
         </mesh>
@@ -104,13 +164,17 @@ const Tree: FC<TreeProps> = ({ position, scale = 1 }) => {
   const renderTreeType2 = () => (
     // Wide pine tree
     <>
-      <mesh position={[0, 1.2, 0]}>
+      <mesh position={[0, 1.2, 0]} onClick={handleTreeClick}>
         <cylinderGeometry args={[0.3, 0.4, 2.4, 8]} />
         <meshStandardMaterial color={trunkColor} roughness={0.8} />
       </mesh>
       <group position={[0, 2, 0]}>
         {[0, 1, 2].map((layer) => (
-          <mesh key={layer} position={[0, layer * 0.8, 0]}>
+          <mesh
+            key={layer}
+            position={[0, layer * 0.8, 0]}
+            onClick={handleTreeClick}
+          >
             <coneGeometry args={[1.8 - layer * 0.4, 1.2, 8]} />
             <meshStandardMaterial color={treeColor} />
           </mesh>
@@ -128,22 +192,43 @@ const Tree: FC<TreeProps> = ({ position, scale = 1 }) => {
       {treeType === 1 && renderTreeType1()}
       {treeType === 2 && renderTreeType2()}
 
-      <Html position={[0, labelHeight, 0]} center style={{ zIndex: -1000 }}>
-        <div
-          style={{
-            background: "rgba(0, 0, 0, 0.7)",
-            color: "white",
-            padding: "4px 8px",
-            borderRadius: "4px",
-            fontSize: "14px",
-            fontWeight: "bold",
-            whiteSpace: "nowrap",
-            zIndex: -10,
-          }}
+      {/* Only show the label when the tree is selected */}
+      {isSelected && (
+        <Html
+          position={[0, labelHeight, 0]}
+          center
+          zIndexRange={[0, 0]}
+          style={{ pointerEvents: "none" }}
         >
-          {treeName}
-        </div>
-      </Html>
+          <div
+            style={{
+              background: "rgba(0, 0, 0, 0.7)",
+              color: "white",
+              padding: "8px 12px",
+              borderRadius: "4px",
+              fontSize: "14px",
+              fontWeight: "bold",
+              whiteSpace: "nowrap",
+              transform: "scale(1)",
+              transformOrigin: "center",
+              minWidth: "120px",
+            }}
+          >
+            <div style={{ fontSize: "16px", marginBottom: "4px" }}>
+              {treeName}
+            </div>
+            <div style={{ fontSize: "12px", opacity: 0.9 }}>
+              Age: {treeAge} months
+            </div>
+            <div style={{ fontSize: "12px", opacity: 0.9 }}>
+              Stage: {treeStage}
+            </div>
+            <div style={{ fontSize: "12px", opacity: 0.9 }}>
+              Donation: ${donationAmount}
+            </div>
+          </div>
+        </Html>
+      )}
     </group>
   );
 };
@@ -232,7 +317,10 @@ const River: FC = () => {
   );
 };
 
-const NatureLand: FC<{ treeCount: number }> = ({ treeCount }) => {
+const NatureLand: FC<{ treeCount: number; searchName: string }> = ({
+  treeCount,
+  searchName,
+}) => {
   const [treePositions, setTreePositions] = useState<
     [number, number, number][]
   >([]);
@@ -302,6 +390,7 @@ const NatureLand: FC<{ treeCount: number }> = ({ treeCount }) => {
           key={`tree-${index}`}
           position={position}
           scale={0.8 + Math.random() * 0.5}
+          searchName={searchName}
         />
       ))}
 
@@ -334,14 +423,17 @@ const NatureLand: FC<{ treeCount: number }> = ({ treeCount }) => {
   );
 };
 
-const ForestScene: FC<{ treeCount: number }> = ({ treeCount }) => {
+const ForestScene: FC<{ treeCount: number; searchName: string }> = ({
+  treeCount,
+  searchName = "",
+}) => {
   return (
     <div style={{ height: "100vh", width: "100vw", zIndex: 10 }}>
       <Canvas camera={{ position: [15, 10, 15], fov: 60 }} shadows>
         <Suspense fallback={null}>
           <color attach="background" args={["#87CEEB"]} />
           <fog attach="fog" args={["#E6F7FF", 30, 100]} />
-          <NatureLand treeCount={treeCount} />
+          <NatureLand treeCount={treeCount} searchName={searchName} />
           <Stars radius={100} depth={50} count={5000} factor={4} />
           <OrbitControls
             maxPolarAngle={Math.PI / 2}
