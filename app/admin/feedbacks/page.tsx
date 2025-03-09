@@ -27,6 +27,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useRouter } from "next/navigation";
+import { User } from "@supabase/supabase-js";
+import { checkAuth } from "@/lib/utils";
 
 export default function FeedbacksPage() {
   const router = useRouter();
