@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signUpWithSupabase } from "@/lib/db/db.actions";
+
 import { Button } from "@/components/ui/button";
+import { signUpWithSupabase } from "@/lib/db.action";
 
 interface FormData {
   username: string;

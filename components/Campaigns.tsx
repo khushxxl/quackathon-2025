@@ -1,4 +1,13 @@
 import Link from "next/link";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { MapPin, FileText } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface Campaign {
   id: string;
@@ -8,6 +17,8 @@ interface Campaign {
   start_date: string;
   participant_target: number;
   participants: number;
+  locations: string;
+  requirements: string;
 }
 
 interface CampaignsProps {
@@ -107,6 +118,7 @@ interface CampaignCardProps {
 }
 
 function CampaignCard({ campaign, onApplyClick }: CampaignCardProps) {
+  const router = useRouter();
   return (
     <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 dark:border-gray-700 group hover:-translate-y-2">
       <div className="relative w-full h-48 mb-6 overflow-hidden rounded-xl">
@@ -119,9 +131,15 @@ function CampaignCard({ campaign, onApplyClick }: CampaignCardProps) {
       <h3 className="text-2xl font-poppins-bold text-green-700 dark:text-green-400 mb-4">
         {campaign.name}
       </h3>
-      <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+      <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
         {campaign.description}
       </p>
+      {campaign.requirements && (
+        <p className="text-gray-700 dark:text-gray-400 mb-6 text-sm italic border-l-2 border-green-500 pl-3">
+          <span className="font-medium">Requirements:</span>{" "}
+          {campaign.requirements}
+        </p>
+      )}
       <div className="flex flex-wrap gap-4 mb-6">
         <span className="px-4 py-2 bg-gradient-to-r from-green-100 to-green-50 dark:from-green-900/50 dark:to-green-800/30 text-green-700 dark:text-green-400 rounded-lg text-sm font-medium border border-green-200 dark:border-green-800/50">
           {new Date(campaign.start_date).toLocaleDateString("en-US", {
@@ -134,9 +152,23 @@ function CampaignCard({ campaign, onApplyClick }: CampaignCardProps) {
           {campaign.participant_target - campaign.participants} spots left
         </span>
       </div>
+
+      <div className="flex flex-wrap gap-4 mb-6">
+        {campaign.locations && (
+          <Link
+            target="_blank"
+            href={campaign.locations}
+            className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-100 to-blue-50 dark:from-blue-900/50 dark:to-blue-800/30 text-blue-700 dark:text-blue-400 rounded-lg text-sm font-medium border border-blue-200 dark:border-blue-800/50 hover:shadow-md transition-all"
+          >
+            <MapPin className="w-4 h-4 mr-2" />
+            View Location
+          </Link>
+        )}
+      </div>
+
       <button
         onClick={() => onApplyClick(campaign.id, campaign.name)}
-        className="inline-block px-6 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl hover:shadow-lg hover:shadow-green-500/20 transition duration-300 font-poppins-bold text-center transform group-hover:scale-105"
+        className="inline-block w-full px-6 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl hover:shadow-lg hover:shadow-green-500/20 transition duration-300 font-poppins-bold text-center transform group-hover:scale-105"
       >
         Apply Now
       </button>

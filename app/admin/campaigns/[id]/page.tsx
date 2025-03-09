@@ -125,7 +125,7 @@ export default function CampaignDetailPage() {
             requirements: data.requirements || [],
           };
 
-          setCampaign(mappedCampaign);
+          setCampaign(mappedCampaign as Campaign);
 
           // Get participants data from the JSONB field
           const participantsData = data.participants_data || [];
