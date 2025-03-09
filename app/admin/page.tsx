@@ -120,8 +120,7 @@ export default function DashboardPage() {
         ? campaignsWithTargets.reduce(
             (sum, campaign) =>
               sum +
-              (campaign.participants / campaign.goals.participantTarget) *
-                100,
+              (campaign.participants / campaign.goals.participantTarget) * 100,
             0
           ) / campaignsWithTargets.length
         : 0;
@@ -147,7 +146,9 @@ export default function DashboardPage() {
 
     // Apply status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter((campaign) => campaign.status === statusFilter);
+      filtered = filtered.filter(
+        (campaign) => campaign.status === statusFilter
+      );
     }
 
     // Apply date sorting
@@ -159,12 +160,14 @@ export default function DashboardPage() {
       filtered.sort((a, b) => b.participants - a.participants);
     } else if (dateSort === "highestCompletion") {
       filtered.sort((a, b) => {
-        const completionA = a.goals.participantTarget > 0 
-          ? (a.participants / a.goals.participantTarget) * 100 
-          : 0;
-        const completionB = b.goals.participantTarget > 0 
-          ? (b.participants / b.goals.participantTarget) * 100 
-          : 0;
+        const completionA =
+          a.goals.participantTarget > 0
+            ? (a.participants / a.goals.participantTarget) * 100
+            : 0;
+        const completionB =
+          b.goals.participantTarget > 0
+            ? (b.participants / b.goals.participantTarget) * 100
+            : 0;
         return completionB - completionA;
       });
     }
@@ -209,7 +212,7 @@ export default function DashboardPage() {
                 <Filter className="h-4 w-4 text-green-600" />
                 <span className="text-sm font-medium">Filter by:</span>
               </div>
-              
+
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="Status" />
@@ -221,7 +224,7 @@ export default function DashboardPage() {
                   <SelectItem value="completed">Completed</SelectItem>
                 </SelectContent>
               </Select>
-              
+
               <Select value={dateSort} onValueChange={setDateSort}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Sort by" />
@@ -229,14 +232,18 @@ export default function DashboardPage() {
                 <SelectContent>
                   <SelectItem value="newest">Newest First</SelectItem>
                   <SelectItem value="oldest">Oldest First</SelectItem>
-                  <SelectItem value="mostParticipants">Most Participants</SelectItem>
-                  <SelectItem value="highestCompletion">Highest Completion</SelectItem>
+                  <SelectItem value="mostParticipants">
+                    Most Participants
+                  </SelectItem>
+                  <SelectItem value="highestCompletion">
+                    Highest Completion
+                  </SelectItem>
                 </SelectContent>
               </Select>
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
+
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={refreshData}
                 className="ml-auto"
               >
@@ -419,7 +426,9 @@ export default function DashboardPage() {
                       />
                     ) : (
                       <div className="flex items-center justify-center h-full">
-                        <p className="text-muted-foreground text-sm">No campaign data available</p>
+                        <p className="text-muted-foreground text-sm">
+                          No campaign data available
+                        </p>
                       </div>
                     )}
                   </div>
@@ -495,7 +504,8 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="h-40 mb-4">
-                    {campaigns.filter(c => c.goals.participantTarget > 0).length > 0 ? (
+                    {campaigns.filter((c) => c.goals.participantTarget > 0)
+                      .length > 0 ? (
                       <BarChart
                         data={campaigns
                           .filter((c) => c.goals.participantTarget > 0)
@@ -511,9 +521,10 @@ export default function DashboardPage() {
                                 campaign.goals.participantTarget) *
                               100;
                             return {
-                              name: campaign.name.length > 10 
-                                ? campaign.name.substring(0, 10) + '...' 
-                                : campaign.name,
+                              name:
+                                campaign.name.length > 10
+                                  ? campaign.name.substring(0, 10) + "..."
+                                  : campaign.name,
                               value: percentage > 100 ? 100 : percentage,
                             };
                           })}
@@ -521,7 +532,9 @@ export default function DashboardPage() {
                       />
                     ) : (
                       <div className="flex items-center justify-center h-full">
-                        <p className="text-muted-foreground text-sm">No campaigns with targets</p>
+                        <p className="text-muted-foreground text-sm">
+                          No campaigns with targets
+                        </p>
                       </div>
                     )}
                   </div>
@@ -592,7 +605,9 @@ export default function DashboardPage() {
                       />
                     ) : (
                       <div className="flex items-center justify-center h-full">
-                        <p className="text-muted-foreground text-sm">No campaign data available</p>
+                        <p className="text-muted-foreground text-sm">
+                          No campaign data available
+                        </p>
                       </div>
                     )}
                   </div>
@@ -670,8 +685,8 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       ))}
-                    {filteredCampaigns.filter((c) => c.status === "upcoming").length ===
-                      0 && (
+                    {filteredCampaigns.filter((c) => c.status === "upcoming")
+                      .length === 0 && (
                       <p className="text-muted-foreground text-sm">
                         No upcoming campaigns
                       </p>
