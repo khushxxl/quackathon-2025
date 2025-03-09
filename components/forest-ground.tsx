@@ -11,15 +11,43 @@ interface TreeProps {
   leafColor?: string;
   scale?: number;
   searchName?: string;
+  isSupabaseTree?: boolean;
+  treeName?: string;
+  treeAge?: number;
+  treeStage?: string;
+  donationAmount?: number;
 }
 
-const Tree: FC<TreeProps> = ({ position, scale = 1, searchName = "" }) => {
+const Tree: FC<TreeProps> = ({
+  position,
+  scale = 1,
+  searchName = "",
+  isSupabaseTree = false,
+  treeName: propTreeName,
+  treeAge: propTreeAge,
+  treeStage: propTreeStage,
+  donationAmount: propDonationAmount,
+}) => {
   const [treePosition, setTreePosition] =
     useState<[number, number, number]>(position);
   const [isSelected, setIsSelected] = useState(false);
 
   // Use useMemo to generate random values once and preserve them
   const treeData = useMemo(() => {
+    // If this is a Supabase tree, use provided values
+    if (isSupabaseTree) {
+      return {
+        treeType: Math.floor(Math.random() * 3), // Still randomize tree type
+        treeName: propTreeName || "Unknown",
+        treeAge: propTreeAge || 1,
+        treeStage: propTreeStage || "Seedling",
+        donationAmount: propDonationAmount || 10,
+        // Make Supabase trees have a slightly unique color to distinguish them
+        treeColor: new THREE.Color("#3D7A37").getStyle(),
+        trunkColor: new THREE.Color("#5A4B32").getStyle(),
+      };
+    }
+
     // Random tree type (0-2)
     const treeType = Math.floor(Math.random() * 3);
 
@@ -85,7 +113,14 @@ const Tree: FC<TreeProps> = ({ position, scale = 1, searchName = "" }) => {
       trunkColor,
     };
     // Empty dependency array ensures this runs once on mount
-  }, []);
+    // Include isSupabaseTree to recalculate if this property changes
+  }, [
+    isSupabaseTree,
+    propTreeName,
+    propTreeAge,
+    propTreeStage,
+    propDonationAmount,
+  ]);
 
   const {
     treeType,
@@ -202,7 +237,9 @@ const Tree: FC<TreeProps> = ({ position, scale = 1, searchName = "" }) => {
         >
           <div
             style={{
-              background: "rgba(0, 0, 0, 0.7)",
+              background: isSupabaseTree
+                ? "rgba(34, 139, 34, 0.85)"
+                : "rgba(0, 0, 0, 0.7)",
               color: "white",
               padding: "8px 12px",
               borderRadius: "4px",
@@ -212,13 +249,16 @@ const Tree: FC<TreeProps> = ({ position, scale = 1, searchName = "" }) => {
               transform: "scale(1)",
               transformOrigin: "center",
               minWidth: "120px",
+              border: isSupabaseTree
+                ? "2px solid rgba(255, 255, 255, 0.5)"
+                : "none",
             }}
           >
             <div style={{ fontSize: "16px", marginBottom: "4px" }}>
-              {treeName}
+              {treeName} {isSupabaseTree && "⭐"}
             </div>
             <div style={{ fontSize: "12px", opacity: 0.9 }}>
-              Age: {treeAge} months
+              Age: {treeAge} {treeAge === 1 ? "month" : "months"}
             </div>
             <div style={{ fontSize: "12px", opacity: 0.9 }}>
               Stage: {treeStage}
@@ -226,6 +266,11 @@ const Tree: FC<TreeProps> = ({ position, scale = 1, searchName = "" }) => {
             <div style={{ fontSize: "12px", opacity: 0.9 }}>
               Donation: ${donationAmount}
             </div>
+            {isSupabaseTree && (
+              <div style={{ fontSize: "12px", opacity: 0.9, marginTop: "4px" }}>
+                Real Donor Tree!
+              </div>
+            )}
           </div>
         </Html>
       )}
@@ -317,10 +362,11 @@ const River: FC = () => {
   );
 };
 
-const NatureLand: FC<{ treeCount: number; searchName: string }> = ({
-  treeCount,
-  searchName,
-}) => {
+const NatureLand: FC<{
+  treeCount: number;
+  searchName: string;
+  supabaseTrees: any[];
+}> = ({ treeCount, searchName, supabaseTrees = [] }) => {
   const [treePositions, setTreePositions] = useState<
     [number, number, number][]
   >([]);
@@ -334,6 +380,19 @@ const NatureLand: FC<{ treeCount: number; searchName: string }> = ({
 
     setTreePositions(newTreePositions);
   }, [treeCount]);
+
+  // Generate positions for Supabase trees (clustered in a special area)
+  const supabaseTreePositions = useMemo(() => {
+    return supabaseTrees.map((_, index) => {
+      // Create a special area for donated trees
+      // Put them in a nice pattern near the center
+      const angle = (index / supabaseTrees.length) * Math.PI * 2;
+      const radius = 15 + Math.random() * 5; // Distance from center
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      return [x, 0, z] as [number, number, number];
+    });
+  }, [supabaseTrees]);
 
   // Generate many more flowers for a dense meadow
   const flowerPositions: [number, number, number][] = Array(200)
@@ -394,6 +453,33 @@ const NatureLand: FC<{ treeCount: number; searchName: string }> = ({
         />
       ))}
 
+      {/* Render Supabase trees */}
+      {supabaseTrees.map((tree, index) => (
+        <Tree
+          key={`supabase-tree-${index}`}
+          position={supabaseTreePositions[index] || [0, 0, 0]}
+          scale={1.2} // Make them slightly larger
+          searchName={searchName}
+          isSupabaseTree={true}
+          treeName={tree.name}
+          treeAge={Math.max(
+            1,
+            Math.floor(
+              (new Date().getTime() - new Date(tree.created_at).getTime()) /
+                (30 * 24 * 60 * 60 * 1000)
+            )
+          )} // Age in months
+          treeStage={
+            (new Date().getTime() - new Date(tree.created_at).getTime()) /
+              (30 * 24 * 60 * 60 * 1000) >
+            12
+              ? "Young"
+              : "Seedling"
+          }
+          donationAmount={tree.amount}
+        />
+      ))}
+
       {/* Add flowers scattered around */}
       {flowerPositions.map((position, index) => (
         <Flower key={`flower-${index}`} position={position} />
@@ -423,17 +509,22 @@ const NatureLand: FC<{ treeCount: number; searchName: string }> = ({
   );
 };
 
-const ForestScene: FC<{ treeCount: number; searchName: string }> = ({
-  treeCount,
-  searchName = "",
-}) => {
+const ForestScene: FC<{
+  treeCount: number;
+  searchName: string;
+  supabaseTrees: any[];
+}> = ({ treeCount, searchName = "", supabaseTrees = [] }) => {
   return (
     <div style={{ height: "100vh", width: "100vw", zIndex: 10 }}>
       <Canvas camera={{ position: [15, 10, 15], fov: 60 }} shadows>
         <Suspense fallback={null}>
           <color attach="background" args={["#87CEEB"]} />
           <fog attach="fog" args={["#E6F7FF", 30, 100]} />
-          <NatureLand treeCount={treeCount} searchName={searchName} />
+          <NatureLand
+            treeCount={treeCount}
+            searchName={searchName}
+            supabaseTrees={supabaseTrees}
+          />
           <Stars radius={100} depth={50} count={5000} factor={4} />
           <OrbitControls
             maxPolarAngle={Math.PI / 2}

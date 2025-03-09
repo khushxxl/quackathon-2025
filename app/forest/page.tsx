@@ -1,14 +1,49 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/navbar";
 import ForestScene from "@/components/forest-ground";
+import { createClient } from "@supabase/supabase-js";
+
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function ForestPage() {
   const [selectedForest, setSelectedForest] = useState("edinburgh");
   const [treeCount, setTreeCount] = useState(50);
   const [searchName, setSearchName] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [supabaseTrees, setSupabaseTrees] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTrees(selectedForest);
+  }, [selectedForest]);
+
+  const fetchTrees = async (forestLocation: string) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("trees")
+        .select("*")
+        .eq("forest_location", forestLocation);
+
+      if (error) {
+        console.error("Error fetching trees:", error);
+      } else {
+        setSupabaseTrees(data || []);
+        console.log(
+          `Fetched ${data?.length} trees from Supabase for ${forestLocation}`
+        );
+      }
+    } catch (error) {
+      console.error("Error in fetchTrees:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleForestChange = (forest: string) => {
     setSelectedForest(forest);
@@ -26,19 +61,22 @@ export default function ForestPage() {
   // Sample data for forest progress graphs
   const forestData = {
     edinburgh: {
-      treesPlanted: 12500,
+      treesPlanted:
+        12500 + (selectedForest === "edinburgh" ? supabaseTrees.length : 0),
       carbonOffset: 250,
       biodiversityIncrease: 35,
       monthlyGrowth: [120, 150, 200, 180, 220, 250],
     },
     glasgow: {
-      treesPlanted: 18700,
+      treesPlanted:
+        18700 + (selectedForest === "glasgow" ? supabaseTrees.length : 0),
       carbonOffset: 374,
       biodiversityIncrease: 42,
       monthlyGrowth: [180, 210, 250, 300, 330, 370],
     },
     birmingham: {
-      treesPlanted: 8300,
+      treesPlanted:
+        8300 + (selectedForest === "birmingham" ? supabaseTrees.length : 0),
       carbonOffset: 166,
       biodiversityIncrease: 28,
       monthlyGrowth: [80, 100, 130, 140, 150, 170],
@@ -51,7 +89,11 @@ export default function ForestPage() {
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <main>
         <div className="relative">
-          <ForestScene treeCount={treeCount} searchName={searchName} />
+          <ForestScene
+            treeCount={treeCount}
+            searchName={searchName}
+            supabaseTrees={supabaseTrees}
+          />
           <div
             className="absolute top-4 left-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 rounded-xl shadow-lg"
             style={{ zIndex: 1000 }}
@@ -63,6 +105,17 @@ export default function ForestPage() {
               Explore our interactive 3D impact environment. Drag to rotate,
               scroll to zoom.
             </p>
+
+            {/* Trees from database indicator */}
+            {isLoading ? (
+              <p className="text-sm text-green-600 mb-3">
+                Loading your forest data...
+              </p>
+            ) : (
+              <p className="text-sm text-green-600 mb-3">
+                {supabaseTrees.length} donor trees in this forest
+              </p>
+            )}
 
             {/* Add tree search form */}
             <form onSubmit={handleSearch} className="mb-4">
