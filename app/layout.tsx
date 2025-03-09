@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Poppins } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider";
-import Navbar from "@/components/navbar";
 import Head from "next/head";
-import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "react-hot-toast";
 
 const poppins = Poppins({
