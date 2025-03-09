@@ -29,6 +29,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
   SidebarSeparator,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -58,22 +59,28 @@ export function AppSidebar() {
     <Sidebar
       collapsible="icon"
       className="border-r border-gray-200 dark:border-gray-800"
+      style={
+        {
+          "--sidebar-width": "16rem",
+          "--sidebar-width-icon": "4rem",
+        } as React.CSSProperties
+      }
     >
-      <SidebarHeader className="flex items-center justify-center p-4 bg-green-50 dark:bg-green-900/20">
+      <SidebarHeader className="flex items-center  p-4 bg-green-50 dark:bg-green-900/20">
         <div className="flex items-center gap-2">
-          <TreePine className="h-6 w-6 text-green-600 dark:text-green-400" />
           <span
             className={cn(
-              "font-semibold text-md transition-opacity duration-200 text-green-700 dark:text-green-300",
+              "font-semibold text-sm transition-opacity duration-200 text-green-700 dark:text-green-300",
               isCollapsed && "opacity-0 w-0 overflow-hidden"
             )}
           >
             Green Team Analytics
           </span>
+          <SidebarTrigger className="text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40" />
         </div>
       </SidebarHeader>
       <SidebarSeparator />
-      <SidebarContent className="py-2">
+      <SidebarContent className="">
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-4 py-2">
             Navigation
@@ -88,8 +95,15 @@ export function AppSidebar() {
                   className="hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400 text-base nav-button transition-colors"
                   size="lg"
                 >
-                  <Link href="/admin" className="nav-link">
-                    <Home className="h-5 w-5 min-w-5 min-h-5" />
+                  <Link href="/admin" className="nav-link flex items-center">
+                    <div
+                      className={cn(
+                        "flex justify-center",
+                        isCollapsed ? "w-full" : "w-5"
+                      )}
+                    >
+                      <Home className="h-5 w-5 min-w-5 min-h-5" />
+                    </div>
                     <span className={cn("ml-2", isCollapsed && "hidden")}>
                       Dashboard
                     </span>
@@ -104,8 +118,18 @@ export function AppSidebar() {
                   className="hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400 text-base nav-button transition-colors"
                   size="lg"
                 >
-                  <Link href="/admin/campaigns" className="nav-link">
-                    <Calendar className="h-5 w-5 min-w-5 min-h-5" />
+                  <Link
+                    href="/admin/campaigns"
+                    className="nav-link flex items-center"
+                  >
+                    <div
+                      className={cn(
+                        "flex justify-center",
+                        isCollapsed ? "w-full" : "w-5"
+                      )}
+                    >
+                      <Calendar className="h-5 w-5 min-w-5 min-h-5" />
+                    </div>
                     <span className={cn("ml-2", isCollapsed && "hidden")}>
                       Campaigns
                     </span>
@@ -120,8 +144,18 @@ export function AppSidebar() {
                   className="hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400 text-base nav-button transition-colors"
                   size="lg"
                 >
-                  <Link href="/admin/social" className="nav-link">
-                    <MessageSquare className="h-5 w-5 min-w-5 min-h-5" />
+                  <Link
+                    href="/admin/social"
+                    className="nav-link flex items-center"
+                  >
+                    <div
+                      className={cn(
+                        "flex justify-center",
+                        isCollapsed ? "w-full" : "w-5"
+                      )}
+                    >
+                      <MessageSquare className="h-5 w-5 min-w-5 min-h-5" />
+                    </div>
                     <span className={cn("ml-2", isCollapsed && "hidden")}>
                       Social
                     </span>
@@ -136,8 +170,18 @@ export function AppSidebar() {
                   className="hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400 text-base nav-button transition-colors"
                   size="lg"
                 >
-                  <Link href="/admin/feedbacks" className="nav-link">
-                    <Globe className="h-5 w-5 min-w-5 min-h-5" />
+                  <Link
+                    href="/admin/feedbacks"
+                    className="nav-link flex items-center"
+                  >
+                    <div
+                      className={cn(
+                        "flex justify-center",
+                        isCollapsed ? "w-full" : "w-5"
+                      )}
+                    >
+                      <Globe className="h-5 w-5 min-w-5 min-h-5" />
+                    </div>
                     <span className={cn("ml-2", isCollapsed && "hidden")}>
                       Feedbacks
                     </span>

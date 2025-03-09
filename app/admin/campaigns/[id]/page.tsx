@@ -94,7 +94,7 @@ export default function CampaignDetailPage() {
             image: data.image_url,
           };
 
-          setCampaign(mappedCampaign);
+          setCampaign(mappedCampaign as Campaign);
 
           // Get participants data from the JSONB field - use participants_data field
           const participantsData = data.participants_data || [];
