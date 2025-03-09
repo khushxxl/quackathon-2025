@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/navbar";
 import Head from "next/head";
 import { Analytics } from "@vercel/analytics/react";
+import { Toaster } from "react-hot-toast";
 
 const poppins = Poppins({
   weight: ["300"],
@@ -65,6 +66,7 @@ export default function RootLayout({
         className={`${poppins.variable} ${poppins_extrabold.variable} ${poppins_bold.variable}`}
       >
         {children}
+        <Toaster />
       </body>
     </html>
   );
