@@ -45,7 +45,7 @@ export default function ForestPage() {
       <main>
         <div className="relative">
           <ForestScene treeCount={treeCount} />
-          <div className="absolute top-4 left-4 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 rounded-xl shadow-lg">
+          <div className="absolute top-4 left-4  bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 rounded-xl shadow-lg">
             <h1 className="text-2xl font-poppins-bold text-green-700 dark:text-green-400">
               Virtual Impact Experience
             </h1>

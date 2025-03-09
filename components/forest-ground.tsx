@@ -1,5 +1,5 @@
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Stars, Cloud } from "@react-three/drei";
+import { OrbitControls, Stars, Cloud, Html } from "@react-three/drei";
 import { Suspense, useRef, useState, useEffect } from "react";
 import * as THREE from "three";
 import { FC } from "react";
@@ -15,6 +15,33 @@ interface TreeProps {
 const Tree: FC<TreeProps> = ({ position, scale = 1 }) => {
   // Random tree type (0-2)
   const treeType = Math.floor(Math.random() * 3);
+  const [treePosition, setTreePosition] =
+    useState<[number, number, number]>(position);
+
+  // Random human names for trees
+  const humanNames = [
+    "Emma",
+    "Liam",
+    "Olivia",
+    "Noah",
+    "Ava",
+    "William",
+    "Sophia",
+    "James",
+    "Isabella",
+    "Oliver",
+    "Charlotte",
+    "Benjamin",
+    "Amelia",
+    "Elijah",
+    "Mia",
+    "Lucas",
+    "Harper",
+    "Mason",
+    "Evelyn",
+    "Logan",
+  ];
+  const treeName = humanNames[Math.floor(Math.random() * humanNames.length)];
 
   // Randomize colors slightly
   const baseTreeColor = "#2D5A27";
@@ -92,11 +119,31 @@ const Tree: FC<TreeProps> = ({ position, scale = 1 }) => {
     </>
   );
 
+  // Calculate the height for the label based on tree type
+  const labelHeight = treeType === 0 ? 6 : treeType === 1 ? 4.5 : 4;
+
   return (
-    <group position={position} scale={[scale, scale, scale]}>
+    <group position={treePosition} scale={[scale, scale, scale]}>
       {treeType === 0 && renderTreeType0()}
       {treeType === 1 && renderTreeType1()}
       {treeType === 2 && renderTreeType2()}
+
+      <Html position={[0, labelHeight, 0]} center style={{ zIndex: -1000 }}>
+        <div
+          style={{
+            background: "rgba(0, 0, 0, 0.7)",
+            color: "white",
+            padding: "4px 8px",
+            borderRadius: "4px",
+            fontSize: "14px",
+            fontWeight: "bold",
+            whiteSpace: "nowrap",
+            zIndex: -10,
+          }}
+        >
+          {treeName}
+        </div>
+      </Html>
     </group>
   );
 };
@@ -273,11 +320,11 @@ const NatureLand: FC<{ treeCount: number }> = ({ treeCount }) => {
       ))}
 
       {/* Add clouds */}
-      {/* <Cloud position={[-10, 15, -10]} args={[3, 2]} />
+      <Cloud position={[-10, 15, -10]} args={[3, 2]} />
       <Cloud position={[10, 12, 0]} args={[4, 2]} />
       <Cloud position={[0, 10, 10]} args={[3, 2]} />
       <Cloud position={[-20, 18, 5]} args={[5, 2]} />
-      <Cloud position={[15, 14, -15]} args={[4, 3]} />
+      {/* <Cloud position={[15, 14, -15]} args={[4, 3]} />
       <Cloud position={[-5, 16, -25]} args={[3, 2]} />
       <Cloud position={[25, 13, 10]} args={[6, 2]} />
       <Cloud position={[-15, 11, 20]} args={[4, 2]} />
@@ -289,7 +336,7 @@ const NatureLand: FC<{ treeCount: number }> = ({ treeCount }) => {
 
 const ForestScene: FC<{ treeCount: number }> = ({ treeCount }) => {
   return (
-    <div style={{ height: "100vh", width: "100vw" }}>
+    <div style={{ height: "100vh", width: "100vw", zIndex: 10 }}>
       <Canvas camera={{ position: [15, 10, 15], fov: 60 }} shadows>
         <Suspense fallback={null}>
           <color attach="background" args={["#87CEEB"]} />
