@@ -7,6 +7,8 @@ import ForestScene from "@/components/forest-ground";
 export default function ForestPage() {
   const [selectedForest, setSelectedForest] = useState("edinburgh");
   const [treeCount, setTreeCount] = useState(50);
+  const [searchName, setSearchName] = useState("");
+  const [searchInput, setSearchInput] = useState("");
 
   const handleForestChange = (forest: string) => {
     setSelectedForest(forest);
@@ -14,6 +16,11 @@ export default function ForestPage() {
     if (forest === "edinburgh") setTreeCount(200);
     if (forest === "glasgow") setTreeCount(300);
     if (forest === "birmingham") setTreeCount(100);
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchName(searchInput);
   };
 
   // Sample data for forest progress graphs
@@ -44,16 +51,42 @@ export default function ForestPage() {
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <main>
         <div className="relative">
-          <ForestScene treeCount={treeCount} />
-          <div className="absolute top-4 left-4 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 rounded-xl shadow-lg">
+          <ForestScene treeCount={treeCount} searchName={searchName} />
+          <div
+            className="absolute top-4 left-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 rounded-xl shadow-lg"
+            style={{ zIndex: 1000 }}
+          >
             <h1 className="text-2xl font-poppins-bold text-green-700 dark:text-green-400">
               Virtual Impact Experience
             </h1>
-            <p className="text-gray-700 dark:text-gray-300 mt-2">
+            <p className="text-gray-700 dark:text-gray-300 mt-2 mb-3">
               Explore our interactive 3D impact environment. Drag to rotate,
               scroll to zoom.
             </p>
-            <div className="mt-4">
+
+            {/* Add tree search form */}
+            <form onSubmit={handleSearch} className="mb-4">
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  placeholder="Find your tree by name"
+                  className="px-3 py-2 rounded-lg bg-white/90 dark:bg-gray-700/90 text-gray-800 dark:text-gray-200 w-full border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Search
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Find and highlight trees by name (e.g., Emma, Noah)
+              </p>
+            </form>
+
+            <div className="mt-2">
               <p className="text-gray-700 dark:text-gray-300 mb-2">
                 Choose a forest:
               </p>
