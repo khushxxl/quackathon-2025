@@ -7,7 +7,7 @@ const openai = new OpenAI({
 });
 
 // FAQ questions and answers for the chatbot
-export const faqQuestions = [
+const faqQuestions = [
   {
     question: "How can I volunteer?",
     answer:

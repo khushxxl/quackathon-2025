@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ChangeEvent } from "react";
 
 function FeedbackSection({
   activeCampaigns,
@@ -106,7 +106,11 @@ function FeedbackSection({
                   name="program"
                   required
                   value={feedbackForm.program}
-                  onChange={handleFeedbackChange}
+                  onChange={(e) =>
+                    handleFeedbackChange(
+                      e as unknown as ChangeEvent<HTMLInputElement>
+                    )
+                  }
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="">Select a campaign</option>
@@ -132,7 +136,11 @@ function FeedbackSection({
                   required
                   rows={5}
                   value={feedbackForm.feedback}
-                  onChange={handleFeedbackChange}
+                  onChange={(e) =>
+                    handleFeedbackChange(
+                      e as unknown as ChangeEvent<HTMLInputElement>
+                    )
+                  }
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
                   placeholder="Share your experience and suggestions..."
                 />
@@ -144,7 +152,11 @@ function FeedbackSection({
                   id="contact"
                   name="contact"
                   checked={feedbackForm.contact}
-                  onChange={handleCheckboxChange}
+                  onChange={(e) =>
+                    handleCheckboxChange(
+                      e as unknown as ChangeEvent<HTMLInputElement>
+                    )
+                  }
                   className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
                 />
                 <label

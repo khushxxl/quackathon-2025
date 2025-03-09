@@ -73,7 +73,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         if (error) throw error;
 
         const mappedCampaigns = data.map(mapDbCampaignToFrontend);
-        setCampaigns(mappedCampaigns);
+        setCampaigns(mappedCampaigns as Campaign[]);
       } catch (err: any) {
         console.error("Error fetching campaigns:", err);
         setError(err.message);
@@ -161,6 +161,8 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         participant_target: campaign.goals.participantTarget,
         image_url: imageUrl,
         participants_data: [],
+        requirements: campaign.requirements,
+        locations: campaign.locations,
       };
 
       const { data, error } = await supabase
@@ -175,7 +177,10 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
 
       // Add the new campaign to the state
       if (data && data.length > 0) {
-        setCampaigns([...campaigns, mapDbCampaignToFrontend(data[0])]);
+        setCampaigns([
+          ...campaigns,
+          mapDbCampaignToFrontend(data[0]) as Campaign,
+        ]);
       }
     } catch (err: any) {
       console.error("Error adding campaign:", err);

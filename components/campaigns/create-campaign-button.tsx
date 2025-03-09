@@ -47,6 +47,8 @@ export function CreateCampaignButton() {
       participantTarget: 0,
     },
     image: "",
+    requirements: "",
+    locations: "",
   });
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -114,6 +116,8 @@ export function CreateCampaignButton() {
           participantTarget: 0,
         },
         image: "",
+        requirements: "",
+        locations: "",
       });
       setImagePreview(null);
       setImageFile(null);
@@ -270,6 +274,29 @@ export function CreateCampaignButton() {
               min="0"
               value={formData.goals.participantTarget}
               onChange={handleInputChange}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="requirements">Requirements</Label>
+            <Textarea
+              id="requirements"
+              name="requirements"
+              value={formData.requirements}
+              onChange={handleInputChange}
+              rows={3}
+              placeholder="Enter any requirements for participants"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="locations">Location</Label>
+            <Input
+              id="locations"
+              name="locations"
+              value={formData.locations}
+              onChange={handleInputChange}
+              placeholder="Enter campaign location"
             />
           </div>
 
