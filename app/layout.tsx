@@ -23,15 +23,13 @@ const poppins_bold = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Nextjs Boilerplate",
-  description:
-    "actually ship(fast) - a simple to use boilerplate right out of the box with auth, payments and db functions all packed with in!",
+  title: "The Green Life",
+  description: "The Green Life - Shaping the future of Saving the Planet",
   twitter: {
     card: "summary_large_image", // For a large Twitter card
-    site: "https://boilerplate-nextjs-delta.vercel.app/",
-    title: "actually ship(fast) - Nextjs Boilerplate",
-    description:
-      "actually ship(fast) - a simple to use boilerplate right out of the box with auth, payments and db functions all packed with in!",
+    site: "https://thegreenlife.vercel.app/",
+    title: "The Green Life",
+    description: "The Green Life - Shaping the future of Saving the Planet",
     images: "/twitter-image.png", // Twitter image
   },
 };
@@ -45,17 +43,14 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <Head>
         <meta name="twitter:card" content="summary_large_image" />
-        <meta
-          name="twitter:site"
-          content="https://boilerplate-nextjs-delta.vercel.app/"
-        />
+        <meta name="twitter:site" content="https://thegreenlife.vercel.app/" />
         <meta
           name="twitter:title"
-          content="actually ship(fast) - Nextjs Boilerplate"
+          content="The Green Life - Shaping the future of Saving the Planet"
         />
         <meta
           name="twitter:description"
-          content="actually ship(fast) - a simple to use boilerplate right out of the box with auth, payments and db functions all packed with in!"
+          content="The Green Life - Shaping the future of Saving the Planet"
         />
         <meta name="twitter:image" content="/twitter-image.png" />
       </Head>

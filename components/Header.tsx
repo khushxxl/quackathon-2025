@@ -16,7 +16,7 @@ export default function Header({ scrollToSection }: HeaderProps) {
               href="/"
               className="font-poppins-bold text-green-600 dark:text-green-400"
             >
-              The Green Team
+              The Green Life
             </Link>
           </div>
           <nav className="hidden md:flex space-x-8">

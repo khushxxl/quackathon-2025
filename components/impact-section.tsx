@@ -20,7 +20,7 @@ function ImpactSection() {
         <div className="grid md:grid-cols-4 gap-10 text-center">
           <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 hover:shadow-2xl transition duration-300 hover:-translate-y-2">
             <p className="text-5xl md:text-6xl font-poppins-extrabold text-transparent bg-clip-text bg-gradient-to-br from-green-600 to-green-400 dark:from-green-400 dark:to-green-300 mb-4">
-              5,000+
+              5000+
             </p>
             <p className="text-lg text-gray-700 dark:text-gray-300">
               Children Engaged

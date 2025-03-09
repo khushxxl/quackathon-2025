@@ -2,6 +2,12 @@ import Link from "next/link";
 import React from "react";
 
 function CTASection() {
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
   return (
     <section className="py-24 px-4 md:px-8 lg:px-16 relative">
       <div className="max-w-5xl mx-auto relative">
@@ -17,12 +23,13 @@ function CTASection() {
             on our environment.
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center relative z-10">
-            <Link
-              href="/volunteer"
+            <button
+              onClick={() => scrollToSection("campaigns")}
               className="px-8 py-4 bg-white text-green-600 rounded-xl hover:shadow-lg hover:shadow-green-700/20 transition duration-300 font-poppins-bold transform hover:-translate-y-1"
             >
               Become a Volunteer
-            </Link>
+            </button>
+
             <Link
               href="/donate"
               className="px-8 py-4 bg-transparent border-2 border-white text-white rounded-xl hover:bg-white/10 transition duration-300 font-poppins-bold transform hover:-translate-y-1"

@@ -243,10 +243,7 @@ export function AppSidebar() {
                   isCollapsed && "hidden"
                 )}
               >
-                <span className="text-sm font-medium">John Doe</span>
-                <span className="text-xs text-green-600 dark:text-green-400">
-                  Admin
-                </span>
+                <span className="text-sm font-medium">Admin</span>
               </div>
             </Button>
           </DropdownMenuTrigger>

@@ -39,7 +39,7 @@ function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="mb-8 md:mb-0 text-center md:text-left">
             <h2 className="text-2xl font-poppins-bold text-transparent bg-clip-text bg-gradient-to-r from-green-700 to-green-500 dark:from-green-400 dark:to-green-300 mb-3">
-              The Green Team
+              The Green Life
             </h2>
             <p className="text-gray-600 dark:text-gray-400 max-w-md">
               Connecting youth with nature since 2010

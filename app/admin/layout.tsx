@@ -10,8 +10,8 @@ import { CampaignProvider } from "@/context/campaign-context";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Eco Analytics Dashboard",
-  description: "Analytics dashboard for environmental initiatives",
+  title: "The Green Life Analytics",
+  description: "The Green Life Analytics",
 };
 
 export default async function RootLayout({
@@ -28,14 +28,14 @@ export default async function RootLayout({
     <html lang="en">
       <body className="{inter.className}">
         <CampaignProvider>
-        <SidebarProvider defaultOpen={defaultOpen}>
-          <div className="flex min-h-screen">
-            <AppSidebar />
-            <main className="flex-1 flex items-center justify-center">
-              {children}
-            </main>
-          </div>
-        </SidebarProvider>
+          <SidebarProvider defaultOpen={defaultOpen}>
+            <div className="flex min-h-screen">
+              <AppSidebar />
+              <main className="flex-1 flex items-center justify-center">
+                {children}
+              </main>
+            </div>
+          </SidebarProvider>
         </CampaignProvider>
       </body>
     </html>

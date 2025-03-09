@@ -20,7 +20,7 @@ export default function Hero({
             Connecting Youth with Nature
           </h1>
           <p className="text-xl text-white/90 dark:text-white/80 leading-relaxed max-w-2xl mx-auto">
-            The Green Team is dedicated to supporting mental health and
+            The Green Life is dedicated to supporting mental health and
             environmental conservation by connecting children and young people
             with the natural world through immersive experiences.
           </p>
